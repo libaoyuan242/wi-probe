@@ -1,7 +1,16 @@
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> 405fe8d... Removed dependency on common.mak
+=======
+>>>>>>> 405fe8d... Removed dependency on common.mak
 #AC_ROOT	= ../..
 #include $(AC_ROOT)/common.mak
 
 RTAP		= radiotap
+>>>>>>> 405fe8d... Removed dependency on common.mak
 LIB		= libosdep.a
 
 CFLAGS		+= -fPIC
@@ -22,4 +31,4 @@ uninstall:
 
 clean:
 	rm -f $(LIB) *.o .os.*
-	$(MAKE) -C $(RTAP) clean
+	$(MAKE) -C radiotap clean

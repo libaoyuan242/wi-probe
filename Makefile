@@ -1,4 +1,3 @@
-#include ./common.mak
 BINFILES = probe
 
 OBJS_AR	= probe.o osdep/radiotap/radiotap.o
