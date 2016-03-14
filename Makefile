@@ -6,7 +6,11 @@ OBJS_AR	= probe.o osdep/radiotap/radiotap.o
 OSD			:= osdep
 LIBS		:= -L$(OSD) -l$(OSD) $(LIBS)
 LIBOSD		:= $(OSD)/lib$(OSD).a
-CFLAGS		:= -Wall
+OPTFLAGS	= -D_FILE_OFFSET_BITS=64
+CFLAGS		?= -g -W -Wall -O3
+CFLAGS		+= $(OPTFLAGS) $(COMMON_CFLAGS)
+CFLAGS		+= -Wno-unused-but-set-variable -Wno-array-bounds
+bindir      := /usr/local/bin
 
 all:	$(BINFILES)
 

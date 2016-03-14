@@ -143,37 +143,34 @@ unsigned long calc_crc_osdep( unsigned char * buf, int len)
 }
 
 /* CRC checksum verification routine */
-
-
-int check_crc_buf_osdep( unsigned char *buf, int len )
+int check_crc_buf_osdep(unsigned char *buf, int len)
 {
     unsigned long crc;
 
-    if (len<0)
+    if (len < 0)
 	return 0;
 
     crc = calc_crc_osdep(buf, len);
     buf+=len;
-    return( ( ( crc	  ) & 0xFF ) == buf[0] &&
-	    ( ( crc >>	8 ) & 0xFF ) == buf[1] &&
-	    ( ( crc >> 16 ) & 0xFF ) == buf[2] &&
-	    ( ( crc >> 24 ) & 0xFF ) == buf[3] );
+    return (((crc      ) & 0xFF) == buf[0] &&
+	    ((crc >> 8 ) & 0xFF) == buf[1] &&
+	    ((crc >> 16) & 0xFF) == buf[2] &&
+	    ((crc >> 24) & 0xFF) == buf[3]);
 }
 
-//Check if the driver is ndiswrapper */
 static int is_ndiswrapper(const char * iface, const char * path)
 {
     int n, pid;
     if ((pid=fork()) == 0) {
-        close( 0 ); close( 1 ); close( 2 );
-        if (chdir( "/" ) == -1)
+        close(0); close(1); close(2);
+        if (chdir("/") == -1)
 	        perror("chdir");
         execl(path, "iwpriv", iface, "ndis_reset", NULL);
-        exit( 1 );
+        exit(1);
     }
 
-    waitpid( pid, &n, 0 );
-    return ( ( WIFEXITED(n) && WEXITSTATUS(n) == 0 ));
+    waitpid(pid, &n, 0);
+    return ((WIFEXITED(n) && WEXITSTATUS(n) == 0));
 }
 
 /* Search a file recursively */
@@ -187,21 +184,20 @@ static char * searchInside(const char * dir, const char * filename)
     struct dirent *ep;
 
     dp = opendir(dir);
-    if (dp == NULL)
-    {
+    if (dp == NULL) {
         return NULL;
-	}
+    }
 
-    len = strlen( filename );
-    lentot = strlen( dir ) + 256 + 2;
-    curfile = (char *) calloc( 1, lentot );
+    len = strlen(filename);
+    lentot = strlen(dir) + 256 + 2;
+    curfile = (char *) calloc(1, lentot);
 
     while ((ep = readdir(dp)) != NULL) {
         memset(curfile, 0, lentot);
         sprintf(curfile, "%s/%s", dir, ep->d_name);
 
         //Checking if it's the good file
-        if ((int)strlen( ep->d_name) == len && !strcmp(ep->d_name, filename)) {
+        if ((int)strlen(ep->d_name) == len && !strcmp(ep->d_name, filename)) {
             (void)closedir(dp);
             return curfile;
         }
@@ -219,14 +215,14 @@ static char * searchInside(const char * dir, const char * filename)
                 if (ret != NULL)
                 {
                     (void)closedir(dp);
-                    free( curfile );
+                    free(curfile);
                     return ret;
                 }
             }
         }
     }
     (void)closedir(dp);
-    free( curfile );
+    free(curfile);
     return NULL;
 }
 
@@ -277,14 +273,14 @@ static int linux_get_channel(struct wif *wi)
     struct priv_linux *dev = wi_priv(wi);
     struct iwreq wrq;
     int fd, frequency;
-    int chan=0;
+    int chan = 0;
 
     memset(&wrq, 0, sizeof(struct iwreq));
 
     if (dev->main_if)
-        strncpy( wrq.ifr_name, dev->main_if, IFNAMSIZ );
+        strncpy(wrq.ifr_name, dev->main_if, IFNAMSIZ);
     else
-        strncpy( wrq.ifr_name, wi_get_ifname(wi), IFNAMSIZ );
+        strncpy(wrq.ifr_name, wi_get_ifname(wi), IFNAMSIZ);
 
 
     fd = dev->fd_in;
@@ -324,7 +320,7 @@ static int linux_get_freq(struct wif *wi)
     if (dev->drivertype == DT_IPW2200)
         fd = dev->fd_main;
 
-    if (ioctl( fd, SIOCGIWFREQ, &wrq ) < 0)
+    if (ioctl(fd, SIOCGIWFREQ, &wrq) < 0)
         return -1;
 
     frequency = wrq.u.freq.m;
@@ -351,46 +347,41 @@ static int linux_set_rate(struct wif *wi, int rate)
 
     switch(dev->drivertype) {
     case DT_MADWIFING:
-        memset( &ifr, 0, sizeof( ifr ) );
-        strncpy( ifr.ifr_name, wi_get_ifname(wi), sizeof( ifr.ifr_name ) - 1 );
+        memset(&ifr, 0, sizeof(ifr));
+        strncpy(ifr.ifr_name, wi_get_ifname(wi), sizeof(ifr.ifr_name) - 1);
 
-        if( ioctl( dev->fd_in, SIOCGIFINDEX, &ifr ) < 0 )
-        {
+        if (ioctl(dev->fd_in, SIOCGIFINDEX, &ifr) < 0) {
             printf("Interface %s: \n", wi_get_ifname(wi));
-            perror( "ioctl(SIOCGIFINDEX) failed" );
-            return( 1 );
+            perror("ioctl(SIOCGIFINDEX) failed");
+            return 1;
         }
 
         /* Bring interface down*/
         ifr.ifr_flags = 0;
 
-        if( ioctl( dev->fd_in, SIOCSIFFLAGS, &ifr ) < 0 )
-        {
-            perror( "ioctl(SIOCSIFFLAGS) failed" );
-            return( 1 );
+        if (ioctl(dev->fd_in, SIOCSIFFLAGS, &ifr) < 0) {
+            perror("ioctl(SIOCSIFFLAGS) failed");
+            return 1;
         }
 
         usleep(100000);
 
-        snprintf( s,  sizeof( s ) - 1, "%.1fM", (rate/1000000.0) );
+        snprintf(s, sizeof(s) - 1, "%.1fM", (rate/1000000.0));
 
-        if( ( pid = fork() ) == 0 )
-        {
-            close( 0 ); close( 1 ); close( 2 );
+        if ((pid = fork()) == 0) {
+            close(0); close(1); close(2);
             if (chdir( "/" ) == -1)
 	        perror("chdir");
             execlp(dev->iwconfig, "iwconfig", wi_get_ifname(wi),
                     "rate", s, NULL );
-            exit( 1 );
+            exit(1);
         }
 
-        waitpid( pid, &status, 0 );
+        waitpid(pid, &status, 0);
 
         return 0;
-        break;
 
     case DT_MAC80211_RT:
-
         dev->rate = (rate/500000);
         //return 0;
         //Newer mac80211 stacks (2.6.31 and up)
@@ -400,7 +391,6 @@ static int linux_set_rate(struct wif *wi, int rate)
 
     default:
         break;
-
     }
 
     /* ELSE */
@@ -894,9 +884,9 @@ static int linux_set_channel(struct wif *wi, int channel)
     case DT_WLANNG:
         snprintf( s,  sizeof( s ) - 1, "channel=%d", channel );
 
-        if( ( pid = fork() ) == 0 )
+        if ((pid = fork()) == 0)
         {
-            close( 0 ); close( 1 ); close( 2 );
+            close(0); close(1); close(2);
             if (chdir( "/" ) == -1)
 	            perror("chdir");
             execl( dev->wlanctlng, "wlanctl-ng", wi_get_ifname(wi),

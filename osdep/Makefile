@@ -1,5 +1,5 @@
-AC_ROOT	= ../..
-include $(AC_ROOT)/common.mak
+#AC_ROOT	= ../..
+#include $(AC_ROOT)/common.mak
 
 RTAP		= radiotap
 LIB		= libosdep.a
@@ -13,7 +13,7 @@ all:
 
 .os.Linux: $(OBJS)
 	$(AR) cru $(LIB) $(OBJS)
-	$(RANLIB) $(LIB)
+	ranlib $(LIB)
 	touch $(@)
 
 install: all
