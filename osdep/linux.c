@@ -19,6 +19,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
@@ -651,42 +652,38 @@ static int linux_read(struct wif *wi, unsigned char *buf, int count,
                 /* is the CRC visible at the end?
                  * remove
                  */
-                if ( *iterator.this_arg &
-                    IEEE80211_RADIOTAP_F_FCS )
-                {
+                if (*iterator.this_arg &
+                    IEEE80211_RADIOTAP_F_FCS) {
                     fcs_removed = 1;
                     caplen -= 4;
                 }
 
-                if ( *iterator.this_arg &
-                    IEEE80211_RADIOTAP_F_BADFCS )
-                    return( 0 );
+                if (*iterator.this_arg &
+                    IEEE80211_RADIOTAP_F_BADFCS)
+                    return 0;
 
                 break;
-
             }
         }
 
         n = le16_to_cpu(rthdr->it_len);
 
-        if( n <= 0 || n >= caplen )
-            return( 0 );
+        if (n <= 0 || n >= caplen)
+            return 0;
     }
 
     caplen -= n;
 
     //detect fcs at the end, even if the flag wasn't set and remove it
-    if( fcs_removed == 0 && check_crc_buf_osdep( tmpbuf+n, caplen - 4 ) == 1 )
-    {
+    if (fcs_removed == 0 && check_crc_buf_osdep(tmpbuf + n, caplen - 4) == 1)
         caplen -= 4;
-    }
 
-    memcpy( buf, tmpbuf + n, caplen );
+    memcpy(buf, tmpbuf + n, caplen);
 
     if(ri && !got_channel)
         ri->ri_channel = wi_get_channel(wi);
 
-    return( caplen );
+    return caplen;
 }
 
 static int linux_write(struct wif *wi, unsigned char *buf, int count,
@@ -2049,139 +2046,4 @@ static struct wif *linux_open(char *iface)
 struct wif *wi_open_osdep(char *iface)
 {
         return linux_open(iface);
-}
-
-int get_battery_state(void)
-{
-    char buf[128];
-    int batteryTime = 0;
-    FILE *apm;
-    int flag;
-    char units[32];
-    int ret;
-    static int linux_apm = 1;
-    static int linux_acpi = 1;
-
-    if (linux_apm == 1)
-    {
-        if ((apm = fopen("/proc/apm", "r")) != NULL ) {
-            if ( fgets(buf, 128,apm) != NULL ) {
-                int charging, ac;
-                fclose(apm);
-
-                ret = sscanf(buf, "%*s %*d.%*d %*x %x %x %x %*d%% %d %s\n", &ac,
-                                                        &charging, &flag, &batteryTime, units);
-
-                                if(!ret) return 0;
-
-                if ((flag & 0x80) == 0 && charging != 0xFF && ac != 1 && batteryTime != -1) {
-                    if (!strncmp(units, "min", 32))
-                        batteryTime *= 60;
-                }
-                else return 0;
-                linux_acpi = 0;
-                return batteryTime;
-            }
-        }
-        linux_apm = 0;
-    }
-    if (linux_acpi && !linux_apm)
-    {
-        DIR *batteries, *ac_adapters;
-        struct dirent *this_battery, *this_adapter;
-        FILE *acpi, *info;
-        char battery_state[128];
-        char battery_info[128];
-        int rate = 1, remain = 0;
-        static int total_remain = 0, total_cap = 0;
-        int batno = 0;
-        static int info_timer = 0;
-        int batt_full_capacity[3];
-        linux_apm=0;
-        linux_acpi=1;
-        ac_adapters = opendir("/proc/acpi/ac_adapter");
-        if ( ac_adapters == NULL )
-            return 0;
-
-        while (ac_adapters != NULL && ((this_adapter = readdir(ac_adapters)) != NULL)) {
-            if (this_adapter->d_name[0] == '.')
-                continue;
-            /* safe overloaded use of battery_state path var */
-            snprintf(battery_state, sizeof(battery_state),
-                "/proc/acpi/ac_adapter/%s/state", this_adapter->d_name);
-            if ((acpi = fopen(battery_state, "r")) == NULL)
-                continue;
-            if (acpi != NULL) {
-                while(fgets(buf, 128, acpi)) {
-                    if (strstr(buf, "on-line") != NULL) {
-                        fclose(acpi);
-                        if (ac_adapters != NULL)
-                            closedir(ac_adapters);
-                        return 0;
-                    }
-                }
-                fclose(acpi);
-            }
-        }
-        if (ac_adapters != NULL)
-            closedir(ac_adapters);
-
-        batteries = opendir("/proc/acpi/battery");
-
-        if (batteries == NULL) {
-            closedir(batteries);
-            return 0;
-        }
-
-        while (batteries != NULL && ((this_battery = readdir(batteries)) != NULL)) {
-            if (this_battery->d_name[0] == '.')
-                continue;
-
-            snprintf(battery_info, sizeof(battery_info), "/proc/acpi/battery/%s/info", this_battery->d_name);
-            info = fopen(battery_info, "r");
-            batt_full_capacity[batno] = 0;
-            if ( info != NULL ) {
-                while (fgets(buf, sizeof(buf), info) != NULL)
-                    if (sscanf(buf, "last full capacity:      %d mWh", &batt_full_capacity[batno]) == 1)
-                        continue;
-                fclose(info);
-            }
-
-
-            snprintf(battery_state, sizeof(battery_state),
-                "/proc/acpi/battery/%s/state", this_battery->d_name);
-            if ((acpi = fopen(battery_state, "r")) == NULL)
-                continue;
-            while (fgets(buf, 128, acpi)) {
-                if (strncmp(buf, "present:", 8 ) == 0) {
-                                /* No information for this battery */
-                    if (strstr(buf, "no" ))
-                        continue;
-                }
-                else if (strncmp(buf, "charging state:", 15) == 0) {
-                                /* the space makes it different than discharging */
-                    if (strstr(buf, " charging" )) {
-                        fclose( acpi );
-                        return 0;
-                    }
-                }
-                else if (strncmp(buf, "present rate:", 13) == 0) {
-	                rate = atoi(buf + 25);
-                }
-                else if (strncmp(buf, "remaining capacity:", 19) == 0) {
-                    remain = atoi(buf + 25);
-                    total_remain += remain;
-                }
-            }
-            total_cap += batt_full_capacity[batno];
-            fclose(acpi);
-            batteryTime += (int) (( ((float)remain) /rate ) * 3600);
-            batno++;
-        }
-        info_timer++;
-
-        if (batteries != NULL)
-            closedir(batteries);
-    }
-    return batteryTime;
 }
