@@ -78,10 +78,6 @@ struct options {
 	int npackets;
 } opt;
 
-struct devices {
-	unsigned char mac_out[6];
-} dev;
-
 static struct wif *wi_out;
 
 struct Tx_settings {
@@ -89,6 +85,7 @@ struct Tx_settings {
 	unsigned char essid[255];
 	int chan[11];
 	int txpower[16];
+	unsigned char mac_out[6];
 } tx_settings;
 
 unsigned long nb_pkt_sent;
@@ -110,14 +107,14 @@ int maccmp(unsigned char *mac1, unsigned char *mac2)
 
 int send_packet(void *buf, size_t count)
 {
-	struct wif *wi = wi_out; /* XXX globals suck */
+	// struct wif *wi = wi_out; /* XXX globals suck */
 	unsigned char *pkt = (unsigned char*) buf;
 	if ((count > 24) && (pkt[1] & 0x04) == 0 && (pkt[22] & 0x0F) == 0) {
 		pkt[22] = (nb_pkt_sent & 0x0000000F) << 4;
 		pkt[23] = (nb_pkt_sent & 0x00000FF0) >> 4;
 	}
 
-	if (wi_write(wi, buf, count, NULL) == -1) {
+	if (wi_write(wi_out, buf, count, NULL) == -1) {
 		switch (errno) {
 		case EAGAIN:
 		case ENOBUFS:
@@ -135,13 +132,11 @@ int do_attack_test()
 {
 	int len=0, i=0, j, k;
 	int essidlen=0;
-	// memset(tx_settings, '\0', sizeof(struct APt));
 
 	essidlen = strlen(opt.r_essid);
 	if (essidlen > 250) {
 		essidlen = 250;
-	}
-	else if (essidlen > 0) {
+	} else if (essidlen > 0) {
 		tx_settings.len = essidlen;
 		memcpy(tx_settings.essid, opt.r_essid, essidlen);
 		tx_settings.essid[essidlen] = '\0';
@@ -152,7 +147,11 @@ int do_attack_test()
 	time_t tc = time(NULL);
 	lt = localtime(&tc);
 	printf("%02d:%02d:%02d ", lt->tm_hour, lt->tm_min, lt->tm_sec);
-	printf("Trying broadcast probe requests...\n");
+	printf("Broadcasting probe requests with MAC ");
+	for (i = 0; i < 6; i++) {
+		printf("%x", tx_settings.mac_out[i]);
+		printf(i == 5 ? "\n" : ":");
+	}
 
 	len = 24;
 	memcpy(h80211, PROBE_REQ, len);
@@ -166,8 +165,7 @@ int do_attack_test()
 	memcpy(h80211 + len, RATES, 16);
 	len += 16;
 
-// Mehdi: Select channel
-	for (i=0; i<11; i++) {
+	for (i = 0; i < 11; i++) {
 		if (tx_settings.chan[i] == 0)
 			break;
 
@@ -177,18 +175,15 @@ int do_attack_test()
 			wi_set_channel(wi_out, tx_settings.chan[i]);
 		}
 
-		for(k=0; k<16; k++) {
-			if(tx_settings.txpower[k] == 0)
+		for (k = 0; k < 16; k++) {
+			if (tx_settings.txpower[k] == 0)
 				break;
 
 			wi_set_txpower(wi_out, tx_settings.txpower[k]);
 			printf(" tx=%d",tx_settings.txpower[k]);
 
-			//Mehdi: instead of 3 probes put the reps wanted
-			for(j=0; j<opt.npackets; j++) {
-				//Mehdi: not random mac anymore (use the local address)
-				unsigned char test_mac[6] = {20, 21, 22, 23, 24, 25};
-				memcpy(h80211 + 10, test_mac, 6);//wi_out, 6);
+			for (j = 0; j < opt.npackets; j++) {
+				memcpy(h80211 + 10, tx_settings.mac_out, 6);//, wi_out, 6);
 				send_packet(h80211, len);
 				printf(".");
 			}
@@ -202,7 +197,6 @@ int main(int argc, char *argv[])
 {
 	int i, ret;
 	memset(&opt, 0, sizeof(opt));
-	memset(&dev, 0, sizeof(dev));
 	opt.npackets = 1;
 	char channels[66];
 	char txpowers[66];
@@ -307,7 +301,7 @@ int main(int argc, char *argv[])
 	if (tx_settings.chan[0] == 0)
 		tx_settings.chan[0] = wi_get_channel(wi_out);
 
-	wi_get_mac(wi_out, dev.mac_out);
+	wi_get_mac(wi_out, tx_settings.mac_out);
 
 	/* drop privileges */
 	if (setuid(getuid()) == -1)
