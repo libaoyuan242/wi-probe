@@ -13,7 +13,7 @@ all:
 	@$(MAKE) .os.Linux
 
 .os.Linux: $(OBJS)
-	$(AR) cru $(LIB) $(OBJS)
+	$(AR) cr $(LIB) $(OBJS)
 	ranlib $(LIB)
 	touch $(@)
 
