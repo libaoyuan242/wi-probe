@@ -1,6 +1,6 @@
-BINFILES = probe
+BINFILES = wi-probe
 
-OBJS_AR	= probe.o osdep/radiotap/radiotap.o
+OBJS_AR	= wi-probe.o osdep/radiotap/radiotap.o
 
 OSD			:= osdep
 LIBS		:= -L$(OSD) -l$(OSD) $(LIBS)
@@ -16,7 +16,7 @@ all:	$(BINFILES)
 $(LIBOSD):
 	$(MAKE) -lm -C $(OSD)
 
-probe:	$(OBJS_AR) $(LIBOSD)
+wi-probe:	$(OBJS_AR) $(LIBOSD)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJS_AR) -o $(@) $(LIBS) -lm
 
 clean:
