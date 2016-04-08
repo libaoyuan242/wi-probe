@@ -1,6 +1,7 @@
 /*
- *  802.11 injection Probe request
+ *  802.11 probe request injection
  *
+ *  Copyright (C) 2016 Kyle Davies
  *  Copyright (C) 2015 Mehdi Bezahaf
  *  Copyright (C) 2006-2014 Thomas d'Otreppe
  *  Copyright (C) 2004, 2005 Christophe Devine
