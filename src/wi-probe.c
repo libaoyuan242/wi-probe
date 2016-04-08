@@ -34,22 +34,17 @@
  *  version. *  If you delete this exception statement from all source
  *  files in the program, then also delete it here.
  */
-#include <sys/ioctl.h>
-#include <sys/time.h>
-#include <netinet/in.h>
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
 #include <time.h>
 #include <getopt.h>
-#include <netinet/in_systm.h>
 #include <ctype.h>
 
 #include "osdep/osdep.h"
 
-#define REQUESTS    30
-#define NULL_MAC  (unsigned char*)"\x00\x00\x00\x00\x00\x00"
 #define RATES                                                           \
         "\x01\x04\x02\x04\x0B\x16\x32\x08\x0C\x12\x18\x24\x30\x48\x60\x6C"
 #define PROBE_REQ                                                       \
