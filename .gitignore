@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-/src/TAGS
-=======
 # Object files
 *.o
 *.ko
@@ -33,4 +30,3 @@
 
 # Debug files
 *.dSYM/
->>>>>>> 92bed88b6de1f9a6f92a2dd5dca99c8af10b4260
