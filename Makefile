@@ -1,33 +1,43 @@
-BINFILES = wi-probe
+include $(TOPDIR)/rules.mk
 
-OBJS_AR	= wi-probe.o osdep/radiotap/radiotap.o
+PKG_NAME:=wi-probe
+PKG_RELEASE:=1
+PKG_VERSION:=0.2
+PKG_MAINTAINER:=Kyle F. Davies
 
-OSD			:= osdep
-LIBS		:= -L$(OSD) -l$(OSD) $(LIBS)
-LIBOSD		:= $(OSD)/lib$(OSD).a
-OPTFLAGS	= -D_FILE_OFFSET_BITS=64
-CFLAGS		?= -g -W -Wall -O3
-CFLAGS		+= $(OPTFLAGS) $(COMMON_CFLAGS)
-CFLAGS		+= -Wno-unused-but-set-variable -Wno-array-bounds
-bindir      := /usr/local/bin
+include $(INCLUDE_DIR)/package.mk
 
-all:	$(BINFILES)
+PKG_BUILD_DIR := $(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 
-$(LIBOSD):
-	$(MAKE) -lm -C $(OSD)
+define Package/wi-probe
+  SECTION:=utils
+  CATEGORY:=Utilities
+  TITLE:=wi-probe, generates and sends probe requests over a Wi-Fi interface
+  MENU:=1
+endef
 
-wi-probe:	$(OBJS_AR) $(LIBOSD)
-	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJS_AR) -o $(@) $(LIBS) -lm
+define Package/wi-probe/description
+  Allows probe requests to be broadcast using a wireless interface. It is
+  is possible to specify the number of probes, the channels on which to
+  transmit, and the transmit power.
+endef
 
-clean:
-	$(MAKE) -C $(OSD) clean
-	-rm -f $(BINFILES) *.o
+define Build/Prepare
+	mkdir -p $(PKG_BUILD_DIR)
+	$(CP) ./src/* $(PKG_BUILD_DIR)/
+endef
 
-install: all
-	$(MAKE) -C $(OSD) install
-	install -d $(DESTDIR)$(bindir)
-	install -m 755 $(BINFILES) $(DESTDIR)$(bindir)
+define Build/Configure
+	$(call Build/Configure/Default,--with-linux-headers=$(LINUX_DIR))
+endef
 
-uninstall:
-	$(MAKE) -C $(OSD) uninstall
-	-rm -rf $(DESTDIR)
+define Build/Compile
+	$(MAKE) -C $(PKG_BUILD_DIR) $(TARGET_CONFIGURE_OPTS)
+endef
+
+define Package/wi-probe/install
+	$(INSTALL_DIR) $(1)/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/wi-probe $(1)/bin/
+endef
+
+$(eval $(call BuildPackage,wi-probe))

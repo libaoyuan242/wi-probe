@@ -1,0 +1,592 @@
+
+wi-probe.c,928
+#define REQUESTS REQUESTS50,1924
+#define NULL_MAC NULL_MAC51,1947
+#define RATES RATES52,2008
+#define PROBE_REQ PROBE_REQ54,2157
+char usage[] =usage60,2436
+struct options {options75,3097
+	char r_essid[33];r_essid76,3114
+	char *iface_out;iface_out77,3133
+	int npackets;npackets78,3151
+} opt;opt79,3166
+static struct wif *wi_out;wi_out81,3174
+struct Tx_settings {Tx_settings83,3202
+	unsigned char len;len84,3223
+	unsigned char essid[255];essid85,3243
+	int chan[11];chan86,3270
+	int txpower[16];txpower87,3285
+	unsigned char mac_out[6];mac_out88,3303
+} tx_settings;tx_settings89,3330
+unsigned long nb_pkt_sent;nb_pkt_sent91,3346
+unsigned char h80211[4096];h8021192,3373
+int maccmp(unsigned char *mac1, unsigned char *mac2)maccmp94,3402
+int send_packet(void *buf, size_t count)send_packet108,3614
+int do_attack_test()do_attack_test131,4162
+int main(int argc, char *argv[])main196,5725
+
+Makefile,338
+BINFILES = wi-probeBINFILES1,0
+OBJS_AR	= wi-probe.o osdep/radiotap/radiotap.oOBJS_AR3,21
+OSD			:= osdepOSD5,69
+LIBS		:= -L$(OSD) -l$(OSD) $(LIBS)LIBS6,84
+LIBOSD		:= $(OSD)/lib$(OSD).aLIBOSD7,119
+OPTFLAGS	= -D_FILE_OFFSET_BITS=64OPTFLAGS8,149
+CFLAGS		?= -g -W -Wall -O3CFLAGS9,183
+bindir      := /usr/local/binbindir12,308
+
+osdep/network.c,2178
+#define QUEUE_MAX QUEUE_MAX36,1152
+struct queue {queue38,1175
+	unsigned char	q_buf[2048];q_buf39,1190
+	int		q_len;q_len40,1218
+	struct queue	*q_next;q_next42,1232
+	struct queue	*q_prev;q_prev43,1255
+struct priv_net {priv_net46,1282
+	int		pn_s;pn_s47,1300
+	struct queue	pn_queue;pn_queue48,1312
+	struct queue	pn_queue_free;pn_queue_free49,1336
+	int		pn_queue_len;pn_queue_len50,1365
+int net_send(int s, int command, void *arg, int len)net_send53,1389
+int net_read_exact(int s, void *arg, int len)net_read_exact96,2139
+int net_get(int s, void *arg, int *len)net_get120,2476
+static void queue_del(struct queue *q)queue_del145,2924
+static void queue_add(struct queue *head, struct queue *q)queue_add151,3032
+static struct queue *queue_get_slot(struct priv_net *pn)queue_get_slot176,3383
+static void net_enque(struct priv_net *pn, void *buf, int len)net_enque191,3636
+static int net_get_nopacket(struct priv_net *pn, void *arg, int *len)net_get_nopacket205,3894
+static int net_cmd(struct priv_net *pn, int command, void *arg, int alen)net_cmd229,4274
+static int queue_get(struct priv_net *pn, void *buf, int len)queue_get252,4653
+static int net_read(struct wif *wi, unsigned char *h80211, int len,net_read269,4950
+static int net_get_mac(struct wif *wi, unsigned char *mac)net_get_mac316,5929
+static int net_write(struct wif *wi, unsigned char *h80211, int len,net_write339,6366
+static int net_set_channel(struct wif *wi, int chan)net_set_channel360,6754
+static int net_get_channel(struct wif *wi)net_get_channel367,6899
+static int net_set_rate(struct wif *wi, int rate)net_set_rate374,7028
+static int net_get_rate(struct wif *wi)net_get_rate381,7170
+static int net_get_monitor(struct wif *wi)net_get_monitor388,7296
+static void do_net_free(struct wif *wi)do_net_free393,7400
+static void net_close(struct wif *wi)net_close401,7516
+static int get_ip_port(char *iface, char *ip, const int ipsize)get_ip_port409,7632
+static int handshake(int s)handshake438,8057
+static int do_net_open(char *iface)do_net_open445,8155
+static int net_fd(struct wif *wi)net_fd486,8859
+struct wif *net_open(char *iface)net_open493,8953
+
+osdep/packed.h,150
+#define __AIRCRACK_NG_OSDEP_PACKED_H____AIRCRACK_NG_OSDEP_PACKED_H__36,1637
+#define __packed __packed39,1694
+#define __aligned(__aligned43,1781
+
+osdep/network.h,576
+#define __AIRCRACK_NG_OSDEP_NETWORK_H____AIRCRACK_NG_OSDEP_NETWORK_H__9,148
+	NET_RC = 1,NET_RC17,262
+	NET_GET_CHAN,NET_GET_CHAN18,275
+	NET_SET_CHAN,NET_SET_CHAN19,290
+	NET_WRITE,NET_WRITE20,305
+	NET_PACKET,		/* 5 */NET_PACKET21,317
+	NET_GET_MAC,NET_GET_MAC22,339
+	NET_MAC,NET_MAC23,353
+	NET_GET_MONITOR,NET_GET_MONITOR24,363
+	NET_GET_RATE,NET_GET_RATE25,381
+	NET_SET_RATE,NET_SET_RATE26,396
+struct net_hdr {net_hdr29,415
+	uint8_t		nh_type;nh_type30,432
+	uint32_t	nh_len;nh_len31,451
+	uint8_t		nh_data[0];nh_data32,469
+} __packed;__packed33,491
+
+osdep/file.c,1059
+struct priv_file {priv_file39,1219
+        int             pf_fd;pf_fd40,1238
+        int             pf_chan;pf_chan41,1269
+        int             pf_rate;pf_rate42,1302
+        int             pf_dtl;pf_dtl43,1335
+        unsigned char   pf_mac[6];pf_mac44,1367
+static int file_read(struct wif *wi, unsigned char *h80211, int len,file_read47,1406
+static int file_get_mac(struct wif *wi, unsigned char *mac)file_get_mac136,3909
+static int file_write(struct wif *wi, unsigned char *h80211, int len,file_write145,4091
+static int file_set_channel(struct wif *wi, int chan)file_set_channel155,4308
+static int file_get_channel(struct wif *wi)file_get_channel164,4459
+static int file_set_rate(struct wif *wi, int rate)file_set_rate171,4581
+static int file_get_rate(struct wif *wi)file_get_rate180,4729
+static int file_get_monitor(struct wif *wi)file_get_monitor187,4848
+static void file_close(struct wif *wi)file_close194,4935
+static int file_fd(struct wif *wi)file_fd204,5100
+struct wif *file_open(char *iface)file_open211,5211
+
+osdep/osdep.c,747
+int wi_write(struct wif *wi, unsigned char *h80211, int len,wi_write30,993
+int wi_set_channel(struct wif *wi, int chan)wi_set_channel37,1172
+int wi_get_channel(struct wif *wi)wi_get_channel43,1303
+char *wi_get_ifname(struct wif *wi)wi_get_ifname49,1411
+void wi_close(struct wif *wi)wi_close54,1485
+int wi_fd(struct wif *wi)wi_fd60,1576
+struct wif *wi_alloc(int sz)wi_alloc66,1650
+void *wi_priv(struct wif *wi)wi_priv84,1987
+int wi_get_mac(struct wif *wi, unsigned char *mac)wi_get_mac89,2043
+int wi_get_rate(struct wif *wi)wi_get_rate95,2157
+int wi_set_rate(struct wif *wi, int rate)wi_set_rate101,2249
+int wi_set_txpower(struct wif *wi, int txpower)wi_set_txpower108,2365
+struct wif *wi_open(char *iface)wi_open114,2488
+
+osdep/common.c,147
+int getFrequencyFromChannel(int channel)getFrequencyFromChannel27,965
+int getChannelFromFrequency(int frequency)getChannelFromFrequency53,2549
+
+osdep/pcap.h,953
+#define TCPDUMP_MAGIC TCPDUMP_MAGIC35,1547
+#define PCAP_VERSION_MAJOR PCAP_VERSION_MAJOR37,1591
+#define PCAP_VERSION_MINOR PCAP_VERSION_MINOR38,1625
+#define LINKTYPE_ETHERNET LINKTYPE_ETHERNET40,1660
+#define LINKTYPE_IEEE802_11 LINKTYPE_IEEE802_1141,1694
+#define LINKTYPE_PRISM_HEADER LINKTYPE_PRISM_HEADER42,1730
+#define LINKTYPE_RADIOTAP_HDR LINKTYPE_RADIOTAP_HDR43,1766
+#define LINKTYPE_PPI_HDR LINKTYPE_PPI_HDR44,1802
+struct pcap_file_headerpcap_file_header46,1839
+    uint32_t magic;magic48,1865
+    uint16_t version_major;version_major49,1885
+    uint16_t version_minor;version_minor50,1913
+    int32_t thiszone;thiszone51,1941
+    uint32_t sigfigs;sigfigs52,1963
+    uint32_t snaplen;snaplen53,1985
+    uint32_t linktype;linktype54,2007
+struct pcap_pkthdrpcap_pkthdr57,2034
+    int32_t tv_sec;tv_sec59,2055
+    int32_t tv_usec;tv_usec60,2075
+    uint32_t caplen;caplen61,2096
+    uint32_t len;len62,2117
+
+osdep/linux.c,3890
+	DT_NULL = 0,DT_NULL62,1781
+	DT_WLANNG,DT_WLANNG63,1795
+	DT_HOSTAP,DT_HOSTAP64,1807
+	DT_MADWIFI,DT_MADWIFI65,1819
+	DT_MADWIFING,DT_MADWIFING66,1832
+	DT_BCM43XX,DT_BCM43XX67,1847
+	DT_ORINOCO,DT_ORINOCO68,1860
+	DT_ZD1211RW,DT_ZD1211RW69,1873
+	DT_ACX,DT_ACX70,1887
+	DT_MAC80211_RT,DT_MAC80211_RT71,1896
+	DT_AT76USB,DT_AT76USB72,1913
+	DT_IPW2200DT_IPW220073,1926
+} DRIVER_TYPE;DRIVER_TYPE75,1939
+static const char * szaDriverTypes[] = {szaDriverTypes77,1955
+struct priv_linux {priv_linux96,2423
+	int fd_in,	arptype_in;fd_in97,2443
+	int fd_in,	arptype_in;arptype_in97,2443
+	int fd_out, arptype_out;fd_out98,2467
+	int fd_out, arptype_out;arptype_out98,2467
+	int fd_main;fd_main99,2493
+	int fd_rtc;fd_rtc100,2507
+	DRIVER_TYPE drivertype; /* inited to DT_UNKNOWN on allocation by wi_alloc */drivertype102,2521
+	FILE *f_cap_in;f_cap_in104,2600
+	struct pcap_file_header pfh_in;pfh_in106,2618
+	int sysfs_inject;sysfs_inject108,2652
+	int channel;channel109,2671
+	int freq;freq110,2685
+	int rate;rate111,2696
+	int tx_power;tx_power112,2707
+	char *wlanctlng; /* XXX never set */wlanctlng113,2722
+	char *iwpriv;iwpriv114,2760
+	char *iwconfig;iwconfig115,2775
+	char *ifconfig;ifconfig116,2792
+	char *wl;wl117,2809
+	char *main_if;main_if118,2820
+	unsigned char pl_mac[6];pl_mac119,2836
+	int inject_wlanng;inject_wlanng120,2862
+#define ETH_P_80211_RAW ETH_P_80211_RAW124,2910
+#define ARPHRD_IEEE80211	ARPHRD_IEEE80211127,2945
+#define ARPHRD_IEEE80211_PRISM	ARPHRD_IEEE80211_PRISM128,2974
+#define ARPHRD_IEEE80211_FULL	ARPHRD_IEEE80211_FULL129,3009
+#define NULL_MAC	NULL_MAC132,3061
+unsigned long calc_crc_osdep( unsigned char * buf, int len)calc_crc_osdep135,3113
+int check_crc_buf_osdep(unsigned char *buf, int len)check_crc_buf_osdep146,3360
+static int is_ndiswrapper(const char * iface, const char * path)is_ndiswrapper161,3657
+static char * searchInside(const char * dir, const char * filename)searchInside177,4012
+static char * wiToolsPath(const char * tool)wiToolsPath230,5133
+static int linux_get_channel(struct wif *wi)linux_get_channel271,5898
+static int linux_get_freq(struct wif *wi)linux_get_freq306,6576
+static int linux_set_rate(struct wif *wi, int rate)linux_set_rate338,7265
+static int linux_get_rate(struct wif *wi)linux_get_rate415,8860
+static int linux_set_mtu(struct wif *wi, int mtu)linux_set_mtu438,9316
+static int linux_get_mtu(struct wif *wi)linux_get_mtu459,9746
+static int linux_read(struct wif *wi, unsigned char *buf, int count,linux_read480,10158
+static int linux_write(struct wif *wi, unsigned char *buf, int count,linux_write679,14537
+static inline int iw_set_ext(int skfd,			 /* Socket to the kernel */iw_set_ext814,17309
+static int linux_set_txpower(struct wif *wi, int txpower)linux_set_txpower827,17762
+static int linux_set_channel(struct wif *wi, int channel)linux_set_channel874,18645
+static int linux_set_freq(struct wif *wi, int freq)linux_set_freq969,20534
+static int opensysfs(struct priv_linux *dev, char *iface, int fd) {opensysfs1024,21602
+int linux_get_monitor(struct wif *wi)linux_get_monitor1048,22056
+int set_monitor( struct priv_linux *dev, char *iface, int fd )set_monitor1100,23345
+static int openraw(struct priv_linux *dev, char *iface, int fd, int *arptype,openraw1243,26141
+static int do_linux_open(struct wif *wi, char *iface)do_linux_open1437,31228
+static void do_free(struct wif *wi)do_free1839,44228
+static void linux_close(struct wif *wi)linux_close1865,44655
+static int linux_fd(struct wif *wi)linux_fd1879,44868
+static int linux_get_mac(struct wif *wi, unsigned char *mac)linux_get_mac1886,44967
+static int linux_set_mac(struct wif *wi, unsigned char *mac)linux_set_mac1922,45783
+static struct wif *linux_open(char *iface)linux_open1969,46899
+struct wif *wi_open_osdep(char *iface)wi_open_osdep2002,47710
+
+osdep/common.h,50
+#define _OSDEP_COMMON_H__OSDEP_COMMON_H_33,1595
+
+osdep/radiotap/platform.h,267
+#define _BSD_SOURCE_BSD_SOURCE4,59
+#define le16_to_cpu le16_to_cpu8,107
+#define le32_to_cpu le32_to_cpu9,135
+#define get_unaligned(get_unaligned10,163
+#define get_unaligned_le16(get_unaligned_le1618,628
+#define get_unaligned_le32(get_unaligned_le3219,704
+
+osdep/radiotap/radiotap_iter.h,1626
+#define __RADIOTAP_ITER_H__RADIOTAP_ITER_H2,26
+struct radiotap_override {radiotap_override11,161
+	uint8_t field;field12,188
+	uint8_t align:4, size:4;align13,204
+	uint8_t align:4, size:4;size13,204
+struct radiotap_align_size {radiotap_align_size16,234
+	uint8_t align:4, size:4;align17,263
+	uint8_t align:4, size:4;size17,263
+struct ieee80211_radiotap_namespace {ieee80211_radiotap_namespace20,293
+	const struct radiotap_align_size *align_size;align_size21,331
+	int n_bits;n_bits22,378
+	uint32_t oui;oui23,391
+	uint8_t subns;subns24,406
+struct ieee80211_radiotap_vendor_namespaces {ieee80211_radiotap_vendor_namespaces27,426
+	const struct ieee80211_radiotap_namespace *ns;ns28,472
+	int n_ns;n_ns29,520
+struct ieee80211_radiotap_iterator {ieee80211_radiotap_iterator64,2040
+	struct ieee80211_radiotap_header *_rtheader;_rtheader65,2077
+	const struct ieee80211_radiotap_vendor_namespaces *_vns;_vns66,2123
+	const struct ieee80211_radiotap_namespace *current_namespace;current_namespace67,2181
+	unsigned char *_arg, *_next_ns_data;_arg69,2245
+	unsigned char *_arg, *_next_ns_data;_next_ns_data69,2245
+	uint32_t *_next_bitmap;_next_bitmap70,2283
+	unsigned char *this_arg;this_arg72,2309
+	const struct radiotap_override *overrides;overrides74,2369
+	int n_overrides;n_overrides75,2413
+	int this_arg_index;this_arg_index77,2438
+	int this_arg_size;this_arg_size78,2459
+	int is_radiotap_ns;is_radiotap_ns80,2480
+	int _max_length;_max_length82,2502
+	int _arg_index;_arg_index83,2520
+	uint32_t _bitmap_shifter;_bitmap_shifter84,2537
+	int _reset_on_ext;_reset_on_ext85,2564
+
+osdep/radiotap/parse.c,661
+#define _BSD_SOURCE_BSD_SOURCE2,20
+static int fcshdr = 0;fcshdr16,260
+static const struct radiotap_align_size align_size_000000_00[] = {align_size_000000_0018,284
+static const struct ieee80211_radiotap_namespace vns_array[] = {vns_array23,426
+static const struct ieee80211_radiotap_vendor_namespaces vns = {vns32,615
+static void print_radiotap_namespace(struct ieee80211_radiotap_iterator *iter)print_radiotap_namespace37,751
+static void print_test_namespace(struct ieee80211_radiotap_iterator *iter)print_test_namespace81,2000
+static const struct radiotap_override overrides[] = {overrides97,2398
+int main(int argc, char *argv[])main101,2497
+
+osdep/radiotap/radiotap.h,5842
+#define IEEE80211RADIOTAP_HIEEE80211RADIOTAP_H36,1629
+#define PKTHDR_RADIOTAP_VERSION PKTHDR_RADIOTAP_VERSION41,1733
+struct ieee80211_radiotap_header {ieee80211_radiotap_header61,2569
+	uint8_t it_version;     /* Version 0. Only increasesit_version62,2604
+	uint8_t it_pad;it_pad67,2762
+	uint16_t it_len;        /* length of the wholeit_len68,2779
+	uint32_t it_present;	/* A bitmap telling whichit_present73,2956
+enum ieee80211_radiotap_type {ieee80211_radiotap_type187,6979
+	IEEE80211_RADIOTAP_TSFT = 0,IEEE80211_RADIOTAP_TSFT188,7010
+	IEEE80211_RADIOTAP_FLAGS = 1,IEEE80211_RADIOTAP_FLAGS189,7040
+	IEEE80211_RADIOTAP_RATE = 2,IEEE80211_RADIOTAP_RATE190,7071
+	IEEE80211_RADIOTAP_CHANNEL = 3,IEEE80211_RADIOTAP_CHANNEL191,7101
+	IEEE80211_RADIOTAP_FHSS = 4,IEEE80211_RADIOTAP_FHSS192,7134
+	IEEE80211_RADIOTAP_DBM_ANTSIGNAL = 5,IEEE80211_RADIOTAP_DBM_ANTSIGNAL193,7164
+	IEEE80211_RADIOTAP_DBM_ANTNOISE = 6,IEEE80211_RADIOTAP_DBM_ANTNOISE194,7203
+	IEEE80211_RADIOTAP_LOCK_QUALITY = 7,IEEE80211_RADIOTAP_LOCK_QUALITY195,7241
+	IEEE80211_RADIOTAP_TX_ATTENUATION = 8,IEEE80211_RADIOTAP_TX_ATTENUATION196,7279
+	IEEE80211_RADIOTAP_DB_TX_ATTENUATION = 9,IEEE80211_RADIOTAP_DB_TX_ATTENUATION197,7319
+	IEEE80211_RADIOTAP_DBM_TX_POWER = 10,IEEE80211_RADIOTAP_DBM_TX_POWER198,7362
+	IEEE80211_RADIOTAP_ANTENNA = 11,IEEE80211_RADIOTAP_ANTENNA199,7401
+	IEEE80211_RADIOTAP_DB_ANTSIGNAL = 12,IEEE80211_RADIOTAP_DB_ANTSIGNAL200,7435
+	IEEE80211_RADIOTAP_DB_ANTNOISE = 13,IEEE80211_RADIOTAP_DB_ANTNOISE201,7474
+	IEEE80211_RADIOTAP_RX_FLAGS = 14,IEEE80211_RADIOTAP_RX_FLAGS202,7512
+	IEEE80211_RADIOTAP_TX_FLAGS = 15,IEEE80211_RADIOTAP_TX_FLAGS203,7547
+	IEEE80211_RADIOTAP_RTS_RETRIES = 16,IEEE80211_RADIOTAP_RTS_RETRIES204,7582
+	IEEE80211_RADIOTAP_DATA_RETRIES = 17,IEEE80211_RADIOTAP_DATA_RETRIES205,7620
+	IEEE80211_RADIOTAP_MCS = 19,IEEE80211_RADIOTAP_MCS207,7660
+	IEEE80211_RADIOTAP_AMPDU_STATUS = 20,IEEE80211_RADIOTAP_AMPDU_STATUS208,7690
+	IEEE80211_RADIOTAP_RADIOTAP_NAMESPACE = 29,IEEE80211_RADIOTAP_RADIOTAP_NAMESPACE211,7794
+	IEEE80211_RADIOTAP_VENDOR_NAMESPACE = 30,IEEE80211_RADIOTAP_VENDOR_NAMESPACE212,7839
+	IEEE80211_RADIOTAP_EXT = 31IEEE80211_RADIOTAP_EXT213,7882
+#define	IEEE80211_CHAN_TURBO	IEEE80211_CHAN_TURBO217,7936
+#define	IEEE80211_CHAN_CCK	IEEE80211_CHAN_CCK218,7992
+#define	IEEE80211_CHAN_OFDM	IEEE80211_CHAN_OFDM219,8044
+#define	IEEE80211_CHAN_2GHZ	IEEE80211_CHAN_2GHZ220,8098
+#define	IEEE80211_CHAN_5GHZ	IEEE80211_CHAN_5GHZ221,8163
+#define	IEEE80211_CHAN_PASSIVE	IEEE80211_CHAN_PASSIVE222,8227
+#define	IEEE80211_CHAN_DYN	IEEE80211_CHAN_DYN223,8297
+#define	IEEE80211_CHAN_GFSK	IEEE80211_CHAN_GFSK224,8362
+#define	IEEE80211_RADIOTAP_F_CFP	IEEE80211_RADIOTAP_F_CFP227,8463
+#define	IEEE80211_RADIOTAP_F_SHORTPRE	IEEE80211_RADIOTAP_F_SHORTPRE230,8548
+#define	IEEE80211_RADIOTAP_F_WEP	IEEE80211_RADIOTAP_F_WEP234,8656
+#define	IEEE80211_RADIOTAP_F_FRAG	IEEE80211_RADIOTAP_F_FRAG237,8750
+#define	IEEE80211_RADIOTAP_F_FCS	IEEE80211_RADIOTAP_F_FCS240,8844
+#define	IEEE80211_RADIOTAP_F_DATAPAD	IEEE80211_RADIOTAP_F_DATAPAD241,8907
+#define IEEE80211_RADIOTAP_F_BADFCS	IEEE80211_RADIOTAP_F_BADFCS245,9053
+#define IEEE80211_RADIOTAP_F_RX_BADPLCP	IEEE80211_RADIOTAP_F_RX_BADPLCP248,9162
+#define IEEE80211_RADIOTAP_F_TX_FAIL	IEEE80211_RADIOTAP_F_TX_FAIL251,9263
+#define IEEE80211_RADIOTAP_F_TX_CTS	IEEE80211_RADIOTAP_F_TX_CTS253,9354
+#define IEEE80211_RADIOTAP_F_TX_RTS	IEEE80211_RADIOTAP_F_TX_RTS254,9425
+#define IEEE80211_RADIOTAP_AMPDU_REPORT_ZEROLEN	IEEE80211_RADIOTAP_AMPDU_REPORT_ZEROLEN257,9540
+#define IEEE80211_RADIOTAP_AMPDU_IS_ZEROLEN	IEEE80211_RADIOTAP_AMPDU_IS_ZEROLEN258,9596
+#define IEEE80211_RADIOTAP_AMPDU_LAST_KNOWN	IEEE80211_RADIOTAP_AMPDU_LAST_KNOWN259,9648
+#define IEEE80211_RADIOTAP_AMPDU_IS_LAST	IEEE80211_RADIOTAP_AMPDU_IS_LAST260,9700
+#define IEEE80211_RADIOTAP_AMPDU_DELIM_CRC_ERR	IEEE80211_RADIOTAP_AMPDU_DELIM_CRC_ERR261,9749
+#define IEEE80211_RADIOTAP_AMPDU_DELIM_CRC_KNOWN	IEEE80211_RADIOTAP_AMPDU_DELIM_CRC_KNOWN262,9804
+#define IEEE80211_RADIOTAP_MCS_HAVE_BW	IEEE80211_RADIOTAP_MCS_HAVE_BW265,9894
+#define IEEE80211_RADIOTAP_MCS_HAVE_MCS	IEEE80211_RADIOTAP_MCS_HAVE_MCS266,9939
+#define IEEE80211_RADIOTAP_MCS_HAVE_GI	IEEE80211_RADIOTAP_MCS_HAVE_GI267,9985
+#define IEEE80211_RADIOTAP_MCS_HAVE_FMT	IEEE80211_RADIOTAP_MCS_HAVE_FMT268,10030
+#define IEEE80211_RADIOTAP_MCS_HAVE_FEC	IEEE80211_RADIOTAP_MCS_HAVE_FEC269,10076
+#define IEEE80211_RADIOTAP_MCS_HAVE_STBC	IEEE80211_RADIOTAP_MCS_HAVE_STBC270,10122
+#define IEEE80211_RADIOTAP_MCS_HAVE_NESS	IEEE80211_RADIOTAP_MCS_HAVE_NESS271,10168
+#define IEEE80211_RADIOTAP_MCS_NESS_BIT1	IEEE80211_RADIOTAP_MCS_NESS_BIT1272,10214
+#define IEEE80211_RADIOTAP_MCS_BW_MASK	IEEE80211_RADIOTAP_MCS_BW_MASK275,10262
+#define		IEEE80211_RADIOTAP_MCS_BW_20	IEEE80211_RADIOTAP_MCS_BW_20276,10307
+#define		IEEE80211_RADIOTAP_MCS_BW_40	IEEE80211_RADIOTAP_MCS_BW_40277,10347
+#define		IEEE80211_RADIOTAP_MCS_BW_20L	IEEE80211_RADIOTAP_MCS_BW_20L278,10387
+#define		IEEE80211_RADIOTAP_MCS_BW_20U	IEEE80211_RADIOTAP_MCS_BW_20U279,10428
+#define IEEE80211_RADIOTAP_MCS_SGI	IEEE80211_RADIOTAP_MCS_SGI280,10469
+#define IEEE80211_RADIOTAP_MCS_FMT_GF	IEEE80211_RADIOTAP_MCS_FMT_GF281,10510
+#define IEEE80211_RADIOTAP_MCS_FEC_LDPC	IEEE80211_RADIOTAP_MCS_FEC_LDPC282,10554
+#define IEEE80211_RADIOTAP_MCS_STBC_MASK	IEEE80211_RADIOTAP_MCS_STBC_MASK283,10600
+#define IEEE80211_RADIOTAP_MCS_STBC_SHIFT	IEEE80211_RADIOTAP_MCS_STBC_SHIFT284,10646
+#define		IEEE80211_RADIOTAP_MCS_STBC_1	IEEE80211_RADIOTAP_MCS_STBC_1285,10690
+#define		IEEE80211_RADIOTAP_MCS_STBC_2	IEEE80211_RADIOTAP_MCS_STBC_2286,10731
+#define		IEEE80211_RADIOTAP_MCS_STBC_3	IEEE80211_RADIOTAP_MCS_STBC_3287,10772
+#define IEEE80211_RADIOTAP_MCS_NESS_BIT0	IEEE80211_RADIOTAP_MCS_NESS_BIT0288,10813
+
+osdep/radiotap/Makefile,0
+
+osdep/radiotap/radiotap.c,516
+static const struct radiotap_align_size rtap_namespace_sizes[] = {rtap_namespace_sizes24,650
+static const struct ieee80211_radiotap_namespace radiotap_ns = {radiotap_ns50,2030
+int ieee80211_radiotap_iterator_init(ieee80211_radiotap_iterator_init93,3897
+static void find_ns(struct ieee80211_radiotap_iterator *iterator,find_ns166,6148
+static int find_override(struct ieee80211_radiotap_iterator *iterator,find_override188,6593
+int ieee80211_radiotap_iterator_next(ieee80211_radiotap_iterator_next234,8029
+
+osdep/Makefile,135
+RTAP		= radiotapRTAP4,49
+LIB		= libosdep.aLIB6,67
+OBJS		= osdep.o linux.o radiotap/radiotap.o common.o network.o file.oOBJS9,103
+
+osdep/byteorder.h,8308
+#define _AIRCRACK_NG_BYTEORDER_H__AIRCRACK_NG_BYTEORDER_H_36,1634
+	#define ___my_swab16(___my_swab1638,1671
+	#define ___my_swab32(___my_swab3242,1858
+	#define ___my_swab64(___my_swab6448,2139
+			typedef uint64_t u_int64_t;u_int64_t69,3048
+			typedef uint32_t u_int32_t;u_int32_t70,3080
+			typedef uint16_t u_int16_t;u_int16_t71,3112
+			typedef uint8_t  u_int8_t;u_int8_t72,3144
+		#define __be64_to_cpu(__be64_to_cpu84,3304
+		#define __be32_to_cpu(__be32_to_cpu85,3348
+		#define __be16_to_cpu(__be16_to_cpu86,3392
+		#define __cpu_to_be64(__cpu_to_be6487,3436
+		#define __cpu_to_be32(__cpu_to_be3288,3480
+		#define __cpu_to_be16(__cpu_to_be1689,3524
+		#define __le64_to_cpu(__le64_to_cpu90,3568
+		#define __le32_to_cpu(__le32_to_cpu91,3600
+		#define __le16_to_cpu(__le16_to_cpu92,3632
+		#define __cpu_to_le64(__cpu_to_le6493,3664
+		#define __cpu_to_le32(__cpu_to_le3294,3696
+		#define __cpu_to_le16(__cpu_to_le1695,3728
+		#define AIRCRACK_NG_BYTE_ORDER_DEFINEDAIRCRACK_NG_BYTE_ORDER_DEFINED97,3762
+		#define __be64_to_cpu(__be64_to_cpu108,3893
+		#define __be32_to_cpu(__be32_to_cpu109,3937
+		#define __be16_to_cpu(__be16_to_cpu110,3981
+		#define __cpu_to_be64(__cpu_to_be64111,4025
+		#define __cpu_to_be32(__cpu_to_be32112,4069
+		#define __cpu_to_be16(__cpu_to_be16113,4113
+		#define __le64_to_cpu(__le64_to_cpu114,4157
+		#define __le32_to_cpu(__le32_to_cpu115,4189
+		#define __le16_to_cpu(__le16_to_cpu116,4221
+		#define __cpu_to_le64(__cpu_to_le64117,4253
+		#define __cpu_to_le32(__cpu_to_le32118,4285
+		#define __cpu_to_le16(__cpu_to_le16119,4317
+		#define AIRCRACK_NG_BYTE_ORDER_DEFINEDAIRCRACK_NG_BYTE_ORDER_DEFINED121,4351
+			#define __swab64(__swab64133,4553
+			#define __swab32(__swab32134,4628
+			#define __swab16(__swab16135,4698
+			#define __be64_to_cpu(__be64_to_cpu136,4769
+			#define __be32_to_cpu(__be32_to_cpu137,4853
+			#define __be16_to_cpu(__be16_to_cpu138,4932
+			#define __le64_to_cpu(__le64_to_cpu139,5012
+			#define __le32_to_cpu(__le32_to_cpu140,5099
+			#define __le16_to_cpu(__le16_to_cpu141,5181
+			#define __cpu_to_be64(__cpu_to_be64142,5264
+			#define __cpu_to_be32(__cpu_to_be32143,5348
+			#define __cpu_to_be16(__cpu_to_be16144,5427
+			#define __cpu_to_le64(__cpu_to_le64145,5507
+			#define __cpu_to_le32(__cpu_to_le32146,5594
+			#define __cpu_to_le16(__cpu_to_le16147,5676
+			#define __swab64(__swab64153,5815
+			#define __swab32(__swab32154,5862
+			#define __swab16(__swab16155,5905
+			#define __be64_to_cpu(__be64_to_cpu156,5949
+			#define __be32_to_cpu(__be32_to_cpu157,6005
+			#define __be16_to_cpu(__be16_to_cpu158,6057
+			#define __le64_to_cpu(__le64_to_cpu159,6110
+			#define __le32_to_cpu(__le32_to_cpu160,6169
+			#define __le16_to_cpu(__le16_to_cpu161,6224
+			#define __cpu_to_be64(__cpu_to_be64162,6280
+			#define __cpu_to_be32(__cpu_to_be32163,6336
+			#define __cpu_to_be16(__cpu_to_be16164,6388
+			#define __cpu_to_le64(__cpu_to_le64165,6441
+			#define __cpu_to_le32(__cpu_to_le32166,6500
+			#define __cpu_to_le16(__cpu_to_le16167,6555
+		#define __LITTLE_ENDIAN __LITTLE_ENDIAN171,6625
+		#define __BIG_ENDIAN __BIG_ENDIAN172,6657
+		#define __PDP_ENDIAN __PDP_ENDIAN173,6689
+		#define __BYTE_ORDER __BYTE_ORDER174,6721
+		#define AIRCRACK_NG_BYTE_ORDER_DEFINEDAIRCRACK_NG_BYTE_ORDER_DEFINED176,6763
+		#define __be64_to_cpu(__be64_to_cpu189,6978
+		#define __be32_to_cpu(__be32_to_cpu190,7010
+		#define __be16_to_cpu(__be16_to_cpu191,7042
+		#define __cpu_to_be64(__cpu_to_be64192,7074
+		#define __cpu_to_be32(__cpu_to_be32193,7106
+		#define __cpu_to_be16(__cpu_to_be16194,7138
+		#define __le64_to_cpu(__le64_to_cpu195,7170
+		#define __le32_to_cpu(__le32_to_cpu196,7214
+		#define __le16_to_cpu(__le16_to_cpu197,7258
+		#define __cpu_to_le64(__cpu_to_le64198,7302
+		#define __cpu_to_le32(__cpu_to_le32199,7346
+		#define __cpu_to_le16(__cpu_to_le16200,7390
+		typedef uint64_t u_int64_t;u_int64_t202,7436
+		typedef uint32_t u_int32_t;u_int32_t203,7467
+		typedef uint16_t u_int16_t;u_int16_t204,7498
+		typedef uint8_t  u_int8_t;u_int8_t205,7529
+		#define AIRCRACK_NG_BYTE_ORDER_DEFINEDAIRCRACK_NG_BYTE_ORDER_DEFINED207,7561
+		#define __cpu_to_be64(__cpu_to_be64216,7753
+		#define __cpu_to_be32(__cpu_to_be32217,7807
+		#define AIRCRACK_NG_BYTE_ORDER_DEFINEDAIRCRACK_NG_BYTE_ORDER_DEFINED219,7863
+		#define AIRCRACK_NG_LITTLE_ENDIAN AIRCRACK_NG_LITTLE_ENDIAN237,8374
+		#define AIRCRACK_NG_LITTLE_ENDIAN AIRCRACK_NG_LITTLE_ENDIAN239,8458
+		#define AIRCRACK_NG_LITTLE_ENDIAN AIRCRACK_NG_LITTLE_ENDIAN241,8543
+		#define AIRCRACK_NG_BIG_ENDIAN AIRCRACK_NG_BIG_ENDIAN245,8632
+		#define AIRCRACK_NG_BIG_ENDIAN AIRCRACK_NG_BIG_ENDIAN247,8707
+		#define AIRCRACK_NG_BIG_ENDIAN AIRCRACK_NG_BIG_ENDIAN249,8783
+			#define AIRCRACK_NG_BYTE_ORDER AIRCRACK_NG_BYTE_ORDER258,9100
+			#define AIRCRACK_NG_BYTE_ORDER AIRCRACK_NG_BYTE_ORDER260,9209
+			#define AIRCRACK_NG_BYTE_ORDER AIRCRACK_NG_BYTE_ORDER264,9358
+			#define AIRCRACK_NG_BYTE_ORDER AIRCRACK_NG_BYTE_ORDER266,9469
+			#define AIRCRACK_NG_BYTE_ORDER AIRCRACK_NG_BYTE_ORDER270,9616
+			#define AIRCRACK_NG_BYTE_ORDER AIRCRACK_NG_BYTE_ORDER272,9726
+			#define __be64_to_cpu(__be64_to_cpu283,10049
+			#define __be32_to_cpu(__be32_to_cpu284,10094
+			#define __be16_to_cpu(__be16_to_cpu285,10139
+			#define __cpu_to_be64(__cpu_to_be64286,10184
+			#define __cpu_to_be32(__cpu_to_be32287,10229
+			#define __cpu_to_be16(__cpu_to_be16288,10274
+			#define __le64_to_cpu(__le64_to_cpu289,10319
+			#define __le32_to_cpu(__le32_to_cpu290,10352
+			#define __le16_to_cpu(__le16_to_cpu291,10385
+			#define __cpu_to_le64(__cpu_to_le64292,10418
+			#define __cpu_to_le32(__cpu_to_le32293,10451
+			#define __cpu_to_le16(__cpu_to_le16294,10484
+			#define htobe16 htobe16298,10548
+			#define htobe32 htobe32301,10610
+                        #define htobe64 htobe64304,10686
+			#define betoh16 betoh16307,10783
+			#define betoh32 betoh32310,10845
+                        #define betoh64 betoh64313,10921
+			#define htole16(htole16317,11020
+			#define htole32(htole32320,11076
+                        #define htole64(htole64323,11146
+			#define letoh16(letoh16326,11237
+			#define letoh32(letoh32329,11293
+                        #define letoh64(letoh64332,11363
+			#define __be64_to_cpu(__be64_to_cpu340,11549
+			#define __be32_to_cpu(__be32_to_cpu341,11582
+			#define __be16_to_cpu(__be16_to_cpu342,11615
+			#define __cpu_to_be64(__cpu_to_be64343,11648
+			#define __cpu_to_be32(__cpu_to_be32344,11681
+			#define __cpu_to_be16(__cpu_to_be16345,11714
+			#define __le64_to_cpu(__le64_to_cpu346,11747
+			#define __le32_to_cpu(__le32_to_cpu347,11792
+			#define __le16_to_cpu(__le16_to_cpu348,11837
+			#define __cpu_to_le64(__cpu_to_le64349,11882
+			#define __cpu_to_le32(__cpu_to_le32350,11927
+			#define __cpu_to_le16(__cpu_to_le16351,11972
+			#define htobe16(htobe16355,12048
+			#define htobe32(htobe32358,12104
+                        #define htobe64(htobe64361,12174
+			#define betoh16(betoh16364,12265
+			#define betoh32(betoh32367,12321
+                        #define betoh64(betoh64370,12391
+			#define htole16 htole16374,12484
+			#define htole32 htole32377,12546
+                        #define htole64 htole64380,12622
+			#define letoh16 letoh16383,12719
+			#define letoh32 letoh32386,12781
+                        #define letoh64 letoh64389,12857
+	#define cpu_to_le64 cpu_to_le64395,12968
+	#define le64_to_cpu le64_to_cpu396,13004
+	#define cpu_to_le32 cpu_to_le32397,13040
+	#define le32_to_cpu le32_to_cpu398,13076
+	#define cpu_to_le16 cpu_to_le16399,13112
+	#define le16_to_cpu le16_to_cpu400,13148
+	#define cpu_to_be64 cpu_to_be64401,13184
+	#define be64_to_cpu be64_to_cpu402,13220
+	#define cpu_to_be32 cpu_to_be32403,13256
+	#define be32_to_cpu be32_to_cpu404,13292
+	#define cpu_to_be16 cpu_to_be16405,13328
+	#define be16_to_cpu be16_to_cpu406,13364
+		#define le16toh le16toh409,13420
+		#define be16toh be16toh412,13478
+		#define le32toh le32toh415,13536
+		#define be32toh be32toh418,13594
+		#define htons htons423,13654
+		#define htonl htonl426,13708
+		#define ntohs ntohs429,13762
+		#define ntohl ntohl432,13816
+
+osdep/crctable_osdep.h,113
+#define _CRCTABLE_OSDEP_H_CRCTABLE_OSDEP_H2,26
+const unsigned long int crc_tbl_osdep[256] =crc_tbl_osdep4,53
+
+osdep/osdep.h,1705
+#define __AIRCRACK_NG_OSEDEP_H____AIRCRACK_NG_OSEDEP_H__35,1649
+struct tx_info {tx_info48,1968
+	unsigned int ti_rate;ti_rate49,1985
+struct rx_info {rx_info52,2012
+	uint64_t ri_mactime;ri_mactime53,2029
+	int32_t ri_power;ri_power54,2051
+	int32_t ri_noise;ri_noise55,2070
+	uint32_t ri_channel;ri_channel56,2089
+	uint32_t ri_freq;ri_freq57,2111
+	uint32_t ri_rate;ri_rate58,2130
+	uint32_t ri_antenna;ri_antenna59,2149
+} __packed;__packed60,2171
+#define MAX_IFACE_NAME MAX_IFACE_NAME66,2365
+struct wif {wif67,2391
+	int     (*wi_read)(struct wif *wi, unsigned char *h80211, int len,wi_read68,2404
+	int     (*wi_write)(struct wif *wi, unsigned char *h80211, int len,wi_write70,2513
+	int     (*wi_set_channel)(struct wif *wi, int chan);wi_set_channel72,2624
+	int     (*wi_get_channel)(struct wif *wi);wi_get_channel73,2678
+	int     (*wi_set_freq)(struct wif *wi, int freq);wi_set_freq74,2722
+	int     (*wi_get_freq)(struct wif *wi);wi_get_freq75,2773
+	void	(*wi_close)(struct wif *wi);wi_close76,2814
+	int	(*wi_fd)(struct wif *wi);wi_fd77,2849
+	int	(*wi_get_mac)(struct wif *wi, unsigned char *mac);wi_get_mac78,2880
+	int	(*wi_set_mac)(struct wif *wi, unsigned char *mac);wi_set_mac79,2936
+	int	(*wi_set_rate)(struct wif *wi, int rate);wi_set_rate80,2992
+	int	(*wi_get_rate)(struct wif *wi);wi_get_rate81,3039
+	int	(*wi_set_mtu)(struct wif *wi, int mtu);wi_set_mtu82,3076
+	int	(*wi_get_mtu)(struct wif *wi);wi_get_mtu83,3121
+	int     (*wi_get_monitor)(struct wif *wi);wi_get_monitor84,3157
+	int	(*wi_set_txpower)(struct wif *wi, int txpower);wi_set_txpower86,3210
+	void	*wi_priv;wi_priv88,3264
+	char	wi_interface[MAX_IFACE_NAME];wi_interface89,3280

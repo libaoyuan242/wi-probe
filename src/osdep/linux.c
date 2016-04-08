@@ -1285,8 +1285,7 @@ static int openraw(struct priv_linux *dev, char *iface, int fd, int *arptype,
 		memset( &wrq2, 0, sizeof( struct iwreq ) );
 		strncpy( wrq2.ifr_name, dev->main_if, IFNAMSIZ );
 
-		if( ioctl( dev->fd_main, SIOCGIWMODE, &wrq2 ) < 0 )
-		{
+		if (ioctl(dev->fd_main, SIOCGIWMODE, &wrq2) < 0) {
 			perror("SIOCGIWMODE");
 			return 1;
 		}
@@ -1301,14 +1300,12 @@ static int openraw(struct priv_linux *dev, char *iface, int fd, int *arptype,
 		memset(&sll2, 0, sizeof(sll2));
 		sll2.sll_family	  = AF_PACKET;
 		sll2.sll_ifindex  = ifr2.ifr_ifindex;
-		sll2.sll_protocol = htons(ETH_P_ALL);
+		sll2.sll_protocol = htons( ETH_P_ALL );
 
-		if( bind( dev->fd_main, (struct sockaddr *) &sll2,
-				sizeof( sll2 ) ) < 0 )
-		{
+		if (bind(dev->fd_main, (struct sockaddr *) &sll2, sizeof(sll2 )) < 0) {
 			printf("Interface %s: \n", dev->main_if);
-			perror( "bind(ETH_P_ALL) failed" );
-			return( 1 );
+			perror("bind(ETH_P_ALL) failed");
+			return 1;
 		}
 
 		opensysfs(dev, dev->main_if, dev->fd_in);
@@ -1317,37 +1314,36 @@ static int openraw(struct priv_linux *dev, char *iface, int fd, int *arptype,
 		opensysfs(dev, iface, dev->fd_in);
 		break;
 	case DT_WLANNG:
-		sll.sll_protocol = htons( ETH_P_80211_RAW );
+		sll.sll_protocol = htons(ETH_P_80211_RAW);
 		break;
 	default:
-		sll.sll_protocol = htons( ETH_P_ALL );
+		sll.sll_protocol = htons(ETH_P_ALL);
 		break;
 	}
 
 	/* lookup the hardware type */
 
-	if( ioctl( fd, SIOCGIFHWADDR, &ifr ) < 0 )
-	{
+	if (ioctl(fd, SIOCGIFHWADDR, &ifr) < 0)	{
 		printf("Interface %s: \n", iface);
-		perror( "ioctl(SIOCGIFHWADDR) failed" );
-		return( 1 );
+		perror("ioctl(SIOCGIFHWADDR) failed");
+		return 1;
 	}
 
 	/* lookup iw mode */
-	memset( &wrq, 0, sizeof( struct iwreq ) );
-	strncpy( wrq.ifr_name, iface, IFNAMSIZ );
+	memset(&wrq, 0, sizeof(struct iwreq));
+	strncpy(wrq.ifr_name, iface, IFNAMSIZ);
 
-	if (ioctl( fd, SIOCGIWMODE, &wrq ) < 0) {
+	if (ioctl(fd, SIOCGIWMODE, &wrq) < 0) {
 		/* most probably not supported (ie for rtap ipw interface) *
 		 * so just assume its correctly set...					   */
 		wrq.u.mode = IW_MODE_MONITOR;
 	}
 
-	if (( ifr.ifr_hwaddr.sa_family != ARPHRD_IEEE80211 &&
-		  ifr.ifr_hwaddr.sa_family != ARPHRD_IEEE80211_PRISM &&
-		  ifr.ifr_hwaddr.sa_family != ARPHRD_IEEE80211_FULL) ||
-		( wrq.u.mode != IW_MODE_MONITOR)) {
-		if (set_monitor( dev, iface, fd ) && dev->drivertype != DT_ORINOCO ) {
+	if ((ifr.ifr_hwaddr.sa_family != ARPHRD_IEEE80211 &&
+	     ifr.ifr_hwaddr.sa_family != ARPHRD_IEEE80211_PRISM &&
+	     ifr.ifr_hwaddr.sa_family != ARPHRD_IEEE80211_FULL) ||
+	    (wrq.u.mode != IW_MODE_MONITOR)) {
+		if (set_monitor(dev, iface, fd) && dev->drivertype != DT_ORINOCO) {
 		/* Fixed by Kyle? -- previously !dev->drivertype == DT_ORINOCO */
 			ifr.ifr_flags &= ~(IFF_UP | IFF_BROADCAST | IFF_RUNNING);
 
