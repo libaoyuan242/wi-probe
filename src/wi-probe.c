@@ -1,7 +1,7 @@
 /*
  *  802.11 probe request injection
  *
- *  Copyright (C) 2016 Kyle Davies
+ *  Copyright (C) 2016 Kyle F. Davies
  *  Copyright (C) 2015 Mehdi Bezahaf
  *  Copyright (C) 2006-2014 Thomas d'Otreppe
  *  Copyright (C) 2004, 2005 Christophe Devine
@@ -51,30 +51,13 @@
         "\x40\x00\x00\x00\xFF\xFF\xFF\xFF\xFF\xFF\xCC\xCC\xCC\xCC\xCC\xCC" \
         "\xFF\xFF\xFF\xFF\xFF\xFF\x00\x00"
 
-extern unsigned char * getmac(char * macAddress, int strict, unsigned char * mac);
-
-char usage[] =
-        "\n"
-        "  %s - (C) 2015 Mehdi Bezahaf (based on aircrack-ng tools)\n"
-        "\n"
-        "  usage: probe <options> <interface>\n"
-        "\n"
-        "  Replay options:\n"
-        "\n"
-        "      -e essid  : set target AP SSID\n"
-        "      -o npckts : number of packets per burst [1:512] (default: 1)\n"
-        "      -c channel  : set channel. You can set multiple channels separated by commas. For example -c 1,3,5\n"
-        "      -p txpower  : set txpower. You can set multiple txpowers separated by commas. For example -p 1,3,5\n"
-        "      --help              : Displays this usage screen\n"
-        "\n";
+extern unsigned char *getmac(char * macAddress, int strict, unsigned char * mac);
 
 struct options {
-	char r_essid[33];
+	char r_essid[32];
 	char *iface_out;
 	int npackets;
 } opt;
-
-static struct wif *wi_out;
 
 struct Tx_settings {
 	unsigned char len;
@@ -84,39 +67,51 @@ struct Tx_settings {
 	unsigned char mac_out[6];
 } tx_settings;
 
-unsigned long nb_pkt_sent;
-unsigned char h80211[4096];
+void print_help()
+{
+	printf(
+"Usage: wi-probe <options> <interface>\n\
+\n\
+Replay options:\n\
+\n\
+  -e essid   : set target AP SSID\n\
+  -n npckts  : number of packets per burst [1:512] (default: 1)\n\
+  -c channel : Set channel to transmit on. You can set multiple channels\n\
+               separated by commas. For example -c 1,3,5\n\
+  -p txpower : Set transmit power. You can set multiple txpowers separated by\n\
+               commas. For example -p 1,3,5\n\
+  --help     : Display this usage screen\n\
+  --version  : Display version information\n\n");
+}
+
+void print_version()
+{
+	printf("wi-probe %s- (C) 2016 Kyle F. Davies\n", VERSION_STRING);
+}
 
 int maccmp(unsigned char *mac1, unsigned char *mac2)
 {
-	int i=0;
-
-	if(mac1 == NULL || mac2 == NULL)
+	if (!mac1 || !mac2)
 		return -1;
 
-	for (i=0; i<6; i++) {
+	for (int i = 0; i<6; i++) {
 		if (toupper(mac1[i]) != toupper(mac2[i]))
 			return -1;
 	}
+
 	return 0;
 }
 
-int send_packet(void *buf, size_t count)
+int send_packet(struct wif* wi_out, void *buf, size_t count)
 {
-	// struct wif *wi = wi_out; /* XXX globals suck */
 	unsigned char *pkt = (unsigned char*) buf;
+	static unsigned long nb_pkt_sent = 0;
 	if ((count > 24) && (pkt[1] & 0x04) == 0 && (pkt[22] & 0x0F) == 0) {
 		pkt[22] = (nb_pkt_sent & 0x0000000F) << 4;
 		pkt[23] = (nb_pkt_sent & 0x00000FF0) >> 4;
 	}
 
-	if (wi_write(wi_out, buf, count, NULL) == -1) {
-		switch (errno) {
-		case EAGAIN:
-		case ENOBUFS:
-			usleep(10000);
-			return 0; /* XXX not sure I like this... -sorbo */
-		}
+	if (wi_write(wi_out, pkt, count, NULL) == -1) {
 		perror("wi_write()");
 		return -1;
 	}
@@ -124,12 +119,9 @@ int send_packet(void *buf, size_t count)
 	return 0;
 }
 
-int do_attack_test()
+int do_attack_test(struct wif* wi_out)
 {
-	int len=0, i=0, j, k;
-	int essidlen=0;
-
-	essidlen = strlen(opt.r_essid);
+	int essidlen = strlen(opt.r_essid);
 	if (essidlen > 250) {
 		essidlen = 250;
 	} else if (essidlen > 0) {
@@ -138,21 +130,18 @@ int do_attack_test()
 		tx_settings.essid[essidlen] = '\0';
 	}
 
-
-	struct tm *lt;
-	time_t tc = time(NULL);
-	lt = localtime(&tc);
-	printf("%02d:%02d:%02d ", lt->tm_hour, lt->tm_min, lt->tm_sec);
 	printf("Broadcasting probe requests with MAC ");
-	for (i = 0; i < 6; i++) {
+	for (int i = 0; i < 6; i++) {
 		printf("%x", tx_settings.mac_out[i]);
-		printf(i == 5 ? "\n" : ":");
+		printf(i == 5 ? " " : ":");
 	}
+	printf("on device %s", opt.iface_out);
 
-	len = 24;
+	int len = 24;
+	unsigned char h80211[4096];
 	memcpy(h80211, PROBE_REQ, len);
 
-	h80211[len] = 0x00;	     //ESSID Tag Number
+	h80211[len] = 0x00;	// ESSID Tag Number
 
 	h80211[len + 1] = tx_settings.len; //ESSID Tag Length
 	memcpy(h80211 + len + 2, tx_settings.essid, tx_settings.len);
@@ -161,26 +150,25 @@ int do_attack_test()
 	memcpy(h80211 + len, RATES, 16);
 	len += 16;
 
-	for (i = 0; i < 11; i++) {
+	for (int i = 0; i < 11; i++) {
 		if (tx_settings.chan[i] == 0)
 			break;
 
 		printf("\nSending on Channel %d ", tx_settings.chan[i]);
 		if (wi_get_channel(wi_out) != tx_settings.chan[i]) {
-			//printf("Different channels: existing %d to %d.\n", wi_get_channel(wi_out), tx_settings.chan[i]);
 			wi_set_channel(wi_out, tx_settings.chan[i]);
 		}
 
-		for (k = 0; k < 16; k++) {
-			if (tx_settings.txpower[k] == 0)
+		for (int j = 0; j < 16; j++) {
+			if (tx_settings.txpower[j] == 0)
 				break;
 
-			wi_set_txpower(wi_out, tx_settings.txpower[k]);
-			printf(" tx=%d",tx_settings.txpower[k]);
+			wi_set_txpower(wi_out, tx_settings.txpower[j]);
+			printf(" tx=%d",tx_settings.txpower[j]);
 
-			for (j = 0; j < opt.npackets; j++) {
-				memcpy(h80211 + 10, tx_settings.mac_out, 6);//, wi_out, 6);
-				send_packet(h80211, len);
+			for (int k = 0; k < opt.npackets; k++) {
+				memcpy(h80211 + 10, tx_settings.mac_out, 6);
+				send_packet(wi_out, h80211, len);
 				printf(".");
 			}
 		}
@@ -191,25 +179,25 @@ int do_attack_test()
 
 int main(int argc, char *argv[])
 {
-	int i, ret;
+	int ret;
 	memset(&opt, 0, sizeof(opt));
 	opt.npackets = 1;
 	char channels[66];
 	char txpowers[66];
 
-	for (i = 0; i < 11; i++) {
+	for (int i = 0; i < 11; i++) {
 		tx_settings.chan[i] = 0;
 	}
 
 	while (1) {
 		int option_index = 0;
 		static struct option long_options[] = {
-			{"help", 0, 0, 'H'},
+			{"help", no_argument, 0, 'H'},
+			{"version", no_argument, 0, 'V'},
 			{0,      0, 0,  0 }
 		};
-		int option = getopt_long(argc, argv, "c:e:o:p:", long_options, &option_index);
-		// "b:d:s:m:n:u:v:t:T:f:g:w:x:p:a:c:h:e:ji:r:k:l:y:o:q:0:1:2345679HFBDR",
-		// "c:h:e:p:o:0:1",
+		int option = getopt_long(argc, argv, "c:e:n:p:", long_options,
+		                         &option_index);
 		if (option < 0) break;
 		switch (option) {
 		case 0:
@@ -220,7 +208,7 @@ int main(int argc, char *argv[])
 		case '?':
 			printf("\"%s --help\" for help.\n", argv[0]);
 			return 1;
-		case 'o':
+		case 'n':
 			ret = sscanf(optarg, "%d", &opt.npackets);
 			if (opt.npackets < 0 || opt.npackets > 512 || ret != 1) {
 				printf("Invalid number of packets per burst. [0-512]\n");
@@ -266,14 +254,21 @@ int main(int argc, char *argv[])
 			memset(opt.r_essid, 0, sizeof(opt.r_essid));
 			strncpy(opt.r_essid, optarg, sizeof(opt.r_essid) - 1);
 			break;
+		case 'H':
+			print_help();
+			return 0;
+		case 'V':
+			print_version();
+			return 0;
 		default:
-			goto usage;
+			printf("Unrecognized option \"%c\". Type \"%s --help\" for help.\n",
+			       option, argv[0]);
+			return 1;
 		}
 	}
 
 	if (argc - optind != 1)	{
 		if (argc == 1) {
-		usage:
 			printf("%s", usage);
 		}
 		if (argc - optind == 0) {
@@ -285,9 +280,8 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 	opt.iface_out = argv[optind];
-	printf("%s ", opt.iface_out);
 
-	wi_out = wi_open(opt.iface_out);
+	struct wif* wi_out = wi_open(opt.iface_out);
 	if (!wi_out)
 		return 1;
 
@@ -303,8 +297,5 @@ int main(int argc, char *argv[])
 	if (setuid(getuid()) == -1)
 		perror("setuid");
 
-	//Mehdi: By default inject and nothing else!
-	return do_attack_test();
-
-	/* that's all, folks */
+	return do_attack_test(wi_out);
 }

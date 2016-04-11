@@ -104,7 +104,6 @@ int wi_set_rate(struct wif *wi, int rate)
 	return wi->wi_set_rate(wi, rate);
 }
 
-//Mehdi
 int wi_set_txpower(struct wif *wi, int txpower)
 {
 	assert(wi->wi_set_txpower);

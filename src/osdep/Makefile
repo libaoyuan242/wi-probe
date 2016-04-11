@@ -1,12 +1,9 @@
-#AC_ROOT	= ../..
-#include $(AC_ROOT)/common.mak
+RTAP = radiotap
 
-RTAP		= radiotap
+LIB = libosdep.a
 
-LIB		= libosdep.a
-
-CFLAGS		+= -fPIC
-OBJS		= osdep.o linux.o radiotap/radiotap.o common.o network.o file.o
+CFLAGS += -fPIC
+OBJS = osdep.o linux.o radiotap/radiotap.o common.o network.o file.o
 
 all:
 	@echo Building for Linux
@@ -15,11 +12,8 @@ all:
 .os.Linux: $(OBJS)
 	$(AR) cr $(LIB) $(OBJS)
 	ranlib $(LIB)
-	touch $(@)
 
 install: all
-
-uninstall:
 
 clean:
 	rm -f $(LIB) *.o .os.*

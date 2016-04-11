@@ -65,15 +65,15 @@ struct rx_info {
  */
 #define MAX_IFACE_NAME 64
 struct wif {
-	int     (*wi_read)(struct wif *wi, unsigned char *h80211, int len,
-	                   struct rx_info *ri);
-	int     (*wi_write)(struct wif *wi, unsigned char *h80211, int len,
-	                    struct tx_info *ti);
-	int     (*wi_set_channel)(struct wif *wi, int chan);
-	int     (*wi_get_channel)(struct wif *wi);
-	int     (*wi_set_freq)(struct wif *wi, int freq);
-	int     (*wi_get_freq)(struct wif *wi);
-	void	(*wi_close)(struct wif *wi);
+	int (*wi_read)(struct wif *wi, unsigned char *h80211, int len,
+	               struct rx_info *ri);
+	int (*wi_write)(struct wif *wi, unsigned char *h80211, int len,
+	                struct tx_info *ti);
+	int (*wi_set_channel)(struct wif *wi, int chan);
+	int (*wi_get_channel)(struct wif *wi);
+	int (*wi_set_freq)(struct wif *wi, int freq);
+	int (*wi_get_freq)(struct wif *wi);
+	void (*wi_close)(struct wif *wi);
 	int	(*wi_fd)(struct wif *wi);
 	int	(*wi_get_mac)(struct wif *wi, unsigned char *mac);
 	int	(*wi_set_mac)(struct wif *wi, unsigned char *mac);
@@ -81,8 +81,7 @@ struct wif {
 	int	(*wi_get_rate)(struct wif *wi);
 	int	(*wi_set_mtu)(struct wif *wi, int mtu);
 	int	(*wi_get_mtu)(struct wif *wi);
-	int     (*wi_get_monitor)(struct wif *wi);
-	//Mehdi
+	int (*wi_get_monitor)(struct wif *wi);
 	int	(*wi_set_txpower)(struct wif *wi, int txpower);
 
 	void	*wi_priv;
@@ -104,7 +103,6 @@ extern int wi_get_mac(struct wif *wi, unsigned char *mac);
 extern int wi_get_rate(struct wif *wi);
 extern int wi_set_rate(struct wif *wi, int rate);
 extern int wi_set_txpower(struct wif *wi, int txpower);
-
 extern struct wif *wi_open_osdep(char *iface);
 extern void *wi_priv(struct wif *wi);
 extern struct wif *wi_alloc(int sz);
