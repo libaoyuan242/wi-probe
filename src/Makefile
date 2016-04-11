@@ -1,3 +1,6 @@
+VERSION := 0.2
+RELEASE := 1
+
 BINFILES = wi-probe
 
 OBJS_AR = wi-probe.o osdep/radiotap/radiotap.o
@@ -9,7 +12,7 @@ OPTFLAGS = -D_FILE_OFFSET_BITS=64
 CFLAGS ?= -g -W -Wall -O3
 CFLAGS += $(OPTFLAGS) $(COMMON_CFLAGS)
 CFLAGS += -Wno-unused-but-set-variable -Wno-array-bounds
-CFLAGS += -D WIPROBE_VERSION=$(PKG_VERSION)-$(PKG_RELEASE)
+CFLAGS += -D WIPROBE_VERSION=\"$(VERSION)-$(RELEASE)\"
 bindir := /usr/local/bin
 
 all: $(BINFILES)
@@ -31,4 +34,4 @@ install: all
 
 uninstall:
 	$(MAKE) -C $(OSD) uninstall
-	-rm -rf $(DESTDIR)
+	rm -rf $(DESTDIR)

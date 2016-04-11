@@ -73,7 +73,6 @@ void print_help()
 "Usage: wi-probe <options> <interface>\n\
 \n\
 Replay options:\n\
-\n\
   -e essid   : set target AP SSID\n\
   -n npckts  : number of packets per burst [1:512] (default: 1)\n\
   -c channel : Set channel to transmit on. You can set multiple channels\n\
@@ -81,12 +80,12 @@ Replay options:\n\
   -p txpower : Set transmit power. You can set multiple txpowers separated by\n\
                commas. For example -p 1,3,5\n\
   --help     : Display this usage screen\n\
-  --version  : Display version information\n\n");
+  --version  : Display version information\n");
 }
 
 void print_version()
 {
-	printf("wi-probe %s- (C) 2016 Kyle F. Davies\n", VERSION_STRING);
+	printf("wi-probe version %s (C) 2016 Kyle F. Davies\n", WIPROBE_VERSION);
 }
 
 int maccmp(unsigned char *mac1, unsigned char *mac2)
@@ -184,17 +183,18 @@ int main(int argc, char *argv[])
 	opt.npackets = 1;
 	char channels[66];
 	char txpowers[66];
+	int i;
 
-	for (int i = 0; i < 11; i++) {
+	for (i = 0; i < 11; i++) {
 		tx_settings.chan[i] = 0;
 	}
 
 	while (1) {
 		int option_index = 0;
 		static struct option long_options[] = {
-			{"help", no_argument, 0, 'H'},
+			{"help",    no_argument, 0, 'H'},
 			{"version", no_argument, 0, 'V'},
-			{0,      0, 0,  0 }
+			{0,         0,           0,  0 }
 		};
 		int option = getopt_long(argc, argv, "c:e:n:p:", long_options,
 		                         &option_index);
@@ -267,16 +267,9 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (argc - optind != 1)	{
-		if (argc == 1) {
-			printf("%s", usage);
-		}
-		if (argc - optind == 0) {
-			printf("No replay interface specified.\n");
-		}
-		if (argc > 1) {
-			printf("\"%s --help\" for help.\n", argv[0]);
-		}
+	if (argc - optind == 0) {
+		printf("No replay interface specified.\n");
+		printf("\"%s --help\" for help.\n", argv[0]);
 		return 1;
 	}
 	opt.iface_out = argv[optind];

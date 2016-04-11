@@ -7,7 +7,7 @@ PKG_MAINTAINER:=Kyle F. Davies
 
 include $(INCLUDE_DIR)/package.mk
 
-PKG_BUILD_DIR := $(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 
 define Package/wi-probe
   SECTION:=utils
