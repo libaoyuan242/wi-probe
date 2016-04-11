@@ -261,8 +261,8 @@ int main(int argc, char *argv[])
 			print_version();
 			return 0;
 		default:
-			printf("Unrecognized option \"%c\". Type \"%s --help\" for help.\n",
-			       option, argv[0]);
+			printf("Unrecognized option \"%c\"", option);
+			printf("Type \"%s --help\" for help.\n", argv[0]);
 			return 1;
 		}
 	}

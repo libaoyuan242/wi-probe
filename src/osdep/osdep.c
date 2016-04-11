@@ -22,7 +22,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "network.h"
 #include "osdep.h"
 
 extern struct wif *file_open(char *iface);
@@ -117,8 +116,6 @@ struct wif *wi_open(char *iface)
 	wi = file_open(iface);
 	if (wi == (struct wif*) -1)
 		return NULL;
-	if (!wi)
-		wi = net_open(iface);
 	if (!wi)
 		wi = wi_open_osdep(iface);
 	if (!wi)
