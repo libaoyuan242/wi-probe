@@ -118,7 +118,7 @@ int send_packet(struct wif* wi_out, void *buf, size_t count)
 	return 0;
 }
 
-int do_attack_test(struct wif* wi_out)
+int send_probes(struct wif* wi_out)
 {
 	int essidlen = strlen(opt.r_essid);
 	if (essidlen > 250) {
@@ -163,7 +163,7 @@ int do_attack_test(struct wif* wi_out)
 				break;
 
 			wi_set_txpower(wi_out, tx_settings.txpower[j]);
-			printf(" tx=%d",tx_settings.txpower[j]);
+			printf(" tx power %d\n",tx_settings.txpower[j]);
 
 			for (int k = 0; k < opt.npackets; k++) {
 				memcpy(h80211 + 10, tx_settings.mac_out, 6);
@@ -290,5 +290,7 @@ int main(int argc, char *argv[])
 	if (setuid(getuid()) == -1)
 		perror("setuid");
 
-	return do_attack_test(wi_out);
+	send_probes(wi_out);
+	wi_close(wi_out);
+	return 0;
 }

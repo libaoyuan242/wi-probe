@@ -1,22 +1,22 @@
- /*
-  *  Copyright (c) 2007, 2008, Andrea Bittau <a.bittau@cs.ucl.ac.uk>
-  *
-  *  OS dependent API.
-  *
-  *  This program is free software; you can redistribute it and/or modify
-  *  it under the terms of the GNU General Public License as published by
-  *  the Free Software Foundation; either version 2 of the License, or
-  *  (at your option) any later version.
-  *
-  *  This program is distributed in the hope that it will be useful,
-  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  *  GNU General Public License for more details.
-  *
-  *  You should have received a copy of the GNU General Public License
-  *  along with this program; if not, write to the Free Software
-  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-  */
+/*
+ *  Copyright (c) 2007, 2008, Andrea Bittau <a.bittau@cs.ucl.ac.uk>
+ *
+ *  OS dependent API.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
 
 #include <assert.h>
 #include <stdlib.h>
@@ -29,31 +29,31 @@ extern struct wif *file_open(char *iface);
 int wi_write(struct wif *wi, unsigned char *h80211, int len,
              struct tx_info *ti)
 {
-        assert(wi->wi_write);
-        return wi->wi_write(wi, h80211, len, ti);
+	assert(wi->wi_write);
+	return wi->wi_write(wi, h80211, len, ti);
 }
 
 int wi_set_channel(struct wif *wi, int chan)
 {
-        assert(wi->wi_set_channel);
-        return wi->wi_set_channel(wi, chan);
+	assert(wi->wi_set_channel);
+	return wi->wi_set_channel(wi, chan);
 }
 
 int wi_get_channel(struct wif *wi)
 {
 	assert(wi->wi_get_channel);
-        return wi->wi_get_channel(wi);
+	return wi->wi_get_channel(wi);
 }
 
 char *wi_get_ifname(struct wif *wi)
 {
-        return wi->wi_interface;
+	return wi->wi_interface;
 }
 
 void wi_close(struct wif *wi)
 {
-        assert(wi->wi_close);
-        wi->wi_close(wi);
+	assert(wi->wi_close);
+	wi->wi_close(wi);
 }
 
 int wi_fd(struct wif *wi)
@@ -64,18 +64,17 @@ int wi_fd(struct wif *wi)
 
 struct wif *wi_alloc(int sz)
 {
-        struct wif *wi = malloc(sizeof(*wi));
-        if (!wi)
-	        return NULL;
-        // memset(wi, 0, sizeof(*wi));
+	struct wif *wi = malloc(sizeof(*wi));
+	if (!wi)
+		return NULL;
 
-        void *priv = malloc(sz);
-        if (!priv) {
-	        free(wi);
-	        return NULL;
-        }
-        // memset(priv, 0, sz);
-        wi->wi_priv = priv;
+	void *priv = malloc(sz);
+	if (!priv) {
+		free(wi);
+		return NULL;
+	}
+
+	wi->wi_priv = priv;
 
 	return wi;
 }

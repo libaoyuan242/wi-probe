@@ -44,14 +44,14 @@
 
 #include "radiotap/radiotap.h"
 #include "radiotap/radiotap_iter.h"
-	/* radiotap-parser defines types like u8 that
-	 * ieee80211_radiotap.h needs
-	 *
-	 * we use our local copy of ieee80211_radiotap.h
-	 *
-	 * - since we can't support extensions we don't understand
-	 * - since linux does not include it in userspace headers
-	 */
+/* radiotap-parser defines types like u8 that
+ * ieee80211_radiotap.h needs
+ *
+ * we use our local copy of ieee80211_radiotap.h
+ *
+ * - since we can't support extensions we don't understand
+ * - since linux does not include it in userspace headers
+ */
 #include "osdep.h"
 #include "pcap.h"
 #include "crctable_osdep.h"
@@ -137,7 +137,7 @@ unsigned long calc_crc_osdep( unsigned char * buf, int len)
 	unsigned long crc = 0xFFFFFFFF;
 
 	for( ; len > 0; len--, buf++ )
-	crc = crc_tbl_osdep[(crc ^ *buf) & 0xFF] ^ ( crc >> 8 );
+		crc = crc_tbl_osdep[(crc ^ *buf) & 0xFF] ^ ( crc >> 8 );
 
 	return( ~crc );
 }
@@ -148,14 +148,14 @@ int check_crc_buf_osdep(unsigned char *buf, int len)
 	unsigned long crc;
 
 	if (len < 0)
-	return 0;
+		return 0;
 
 	crc = calc_crc_osdep(buf, len);
 	buf+=len;
 	return (((crc	   ) & 0xFF) == buf[0] &&
-		((crc >> 8 ) & 0xFF) == buf[1] &&
-		((crc >> 16) & 0xFF) == buf[2] &&
-		((crc >> 24) & 0xFF) == buf[3]);
+	        ((crc >> 8 ) & 0xFF) == buf[1] &&
+	        ((crc >> 16) & 0xFF) == buf[2] &&
+	        ((crc >> 24) & 0xFF) == buf[3]);
 }
 
 static int is_ndiswrapper(const char * iface, const char * path)
@@ -229,31 +229,31 @@ static char * searchInside(const char * dir, const char * filename)
 /* Search a wireless tool and return its path */
 static char * wiToolsPath(const char * tool)
 {
-		char * path /*, *found, *env */;
-		int i, nbelems;
-		static const char * paths [] = {
-				"/sbin",
-				"/usr/sbin",
-				"/usr/local/sbin",
-				"/bin",
-				"/usr/bin",
-				"/usr/local/bin",
-				"/tmp"
-		};
+	char * path /*, *found, *env */;
+	int i, nbelems;
+	static const char * paths [] = {
+		"/sbin",
+		"/usr/sbin",
+		"/usr/local/sbin",
+		"/bin",
+		"/usr/bin",
+		"/usr/local/bin",
+		"/tmp"
+	};
 	/*
-	#define SEPARATOR ":"
+	  #define SEPARATOR ":"
 
-	env = getenv("PATH");
-	if (env) {
-		path = strtok(env, SEPARATOR);
-		while (path) {
-			found = searchInside(path, tool);
-					if (found != NULL)
-							return found;
-			path = strtok(NULL, SEPARATOR);
-		}
-	}
-	#undef SEPARATOR
+	  env = getenv("PATH");
+	  if (env) {
+	  path = strtok(env, SEPARATOR);
+	  while (path) {
+	  found = searchInside(path, tool);
+	  if (found != NULL)
+	  return found;
+	  path = strtok(NULL, SEPARATOR);
+	  }
+	  }
+	  #undef SEPARATOR
 	*/
 
 	// Also search in other known location just in case we haven't found it yet
@@ -265,7 +265,7 @@ static char * wiToolsPath(const char * tool)
 			return path;
 	}
 
-		return NULL;
+	return NULL;
 }
 
 static int linux_get_channel(struct wif *wi)
@@ -371,9 +371,9 @@ static int linux_set_rate(struct wif *wi, int rate)
 		if ((pid = fork()) == 0) {
 			close(0); close(1); close(2);
 			if (chdir( "/" ) == -1)
-			perror("chdir");
+				perror("chdir");
 			execlp(dev->iwconfig, "iwconfig", wi_get_ifname(wi),
-					"rate", s, NULL );
+			       "rate", s, NULL );
 			exit(1);
 		}
 
@@ -478,7 +478,7 @@ static int linux_get_mtu(struct wif *wi)
 
 
 static int linux_read(struct wif *wi, unsigned char *buf, int count,
-			  struct rx_info *ri)
+                      struct rx_info *ri)
 {
 	struct priv_linux *dev = wi_priv(wi);
 	unsigned char tmpbuf[4096];
@@ -643,13 +643,13 @@ static int linux_read(struct wif *wi, unsigned char *buf, int count,
 				 * remove
 				 */
 				if (*iterator.this_arg &
-					IEEE80211_RADIOTAP_F_FCS) {
+				    IEEE80211_RADIOTAP_F_FCS) {
 					fcs_removed = 1;
 					caplen -= 4;
 				}
 
 				if (*iterator.this_arg &
-					IEEE80211_RADIOTAP_F_BADFCS)
+				    IEEE80211_RADIOTAP_F_BADFCS)
 					return 0;
 
 				break;
@@ -677,7 +677,7 @@ static int linux_read(struct wif *wi, unsigned char *buf, int count,
 }
 
 static int linux_write(struct wif *wi, unsigned char *buf, int count,
-						struct tx_info *ti)
+                       struct tx_info *ti)
 {
 	struct priv_linux *dev = wi_priv(wi);
 	unsigned char maddr[6];
@@ -723,8 +723,8 @@ static int linux_write(struct wif *wi, unsigned char *buf, int count,
 		/* Wlan-ng isn't able to inject on kernel > 2.6.11 */
 		if( dev->inject_wlanng == 0 )
 		{
-				perror( "write failed" );
-				return( -1 );
+			perror( "write failed" );
+			return( -1 );
 		}
 
 		if (count >= 24)
@@ -778,7 +778,7 @@ static int linux_write(struct wif *wi, unsigned char *buf, int count,
 	if( ret < 0 )
 	{
 		if( errno == EAGAIN || errno == EWOULDBLOCK ||
-			errno == ENOBUFS || errno == ENOMEM )
+		    errno == ENOBUFS || errno == ENOMEM )
 		{
 			usleep( 10000 );
 			return( 0 );
@@ -795,7 +795,7 @@ static int linux_write(struct wif *wi, unsigned char *buf, int count,
 	if( ret < 0 )
 	{
 		if( errno == EAGAIN || errno == EWOULDBLOCK ||
-			errno == ENOBUFS || errno == ENOMEM )
+		    errno == ENOBUFS || errno == ENOMEM )
 		{
 			usleep( 10000 );
 			return( 0 );
@@ -812,9 +812,9 @@ static int linux_write(struct wif *wi, unsigned char *buf, int count,
  * Mehdi: Wrapper to push some Wireless Parameter in the driver
  */
 static inline int iw_set_ext(int skfd,			 /* Socket to the kernel */
-							 const char *ifname, /* Device name */
-							 int request,	 /* WE ID */
-							 struct iwreq *pwrq) /* Fixed part of the request */
+                             const char *ifname, /* Device name */
+                             int request,	 /* WE ID */
+                             struct iwreq *pwrq) /* Fixed part of the request */
 {
 	/* Set device name */
 	strncpy(pwrq->ifr_name, ifname, IFNAMSIZ);
@@ -841,7 +841,7 @@ static int linux_set_txpower(struct wif *wi, int txpower)
 			if (chdir( "/" ) == -1)
 				perror("chdir");
 			execlp(dev->iwconfig, "iwconfig", wi_get_ifname(wi),
-				   "txpower", s, NULL);
+			       "txpower", s, NULL);
 			exit(1);
 		}
 
@@ -890,7 +890,7 @@ static int linux_set_channel(struct wif *wi, int channel)
 			if (chdir( "/" ) == -1)
 				perror("chdir");
 			execl( dev->wlanctlng, "wlanctl-ng", wi_get_ifname(wi),
-					"lnxreq_wlansniff", s, NULL );
+			       "lnxreq_wlansniff", s, NULL );
 			exit( 1 );
 		}
 
@@ -912,9 +912,9 @@ static int linux_set_channel(struct wif *wi, int channel)
 		{
 			close( 0 ); close( 1 ); close( 2 );
 			if (chdir( "/" ) == -1)
-			perror("chdir");
+				perror("chdir");
 			execlp( dev->iwpriv, "iwpriv", wi_get_ifname(wi),
-					"monitor", "1", s, NULL );
+			        "monitor", "1", s, NULL );
 			exit( 1 );
 		}
 
@@ -930,9 +930,9 @@ static int linux_set_channel(struct wif *wi, int channel)
 		{
 			close( 0 ); close( 1 ); close( 2 );
 			if (chdir( "/" ) == -1)
-			perror("chdir");
+				perror("chdir");
 			execlp(dev->iwconfig, "iwconfig", wi_get_ifname(wi),
-					"channel", s, NULL );
+			       "channel", s, NULL );
 			exit( 1 );
 		}
 
@@ -985,9 +985,9 @@ static int linux_set_freq(struct wif *wi, int freq)
 		{
 			close( 0 ); close( 1 ); close( 2 );
 			if (chdir( "/" ) == -1)
-			perror("chdir");
+				perror("chdir");
 			execlp(dev->iwconfig, "iwconfig", wi_get_ifname(wi),
-					"freq", s, NULL );
+			       "freq", s, NULL );
 			exit( 1 );
 		}
 
@@ -1087,9 +1087,9 @@ int linux_get_monitor(struct wif *wi)
 	}
 
 	if( ( ifr.ifr_hwaddr.sa_family != ARPHRD_IEEE80211 &&
-		  ifr.ifr_hwaddr.sa_family != ARPHRD_IEEE80211_PRISM &&
-		  ifr.ifr_hwaddr.sa_family != ARPHRD_IEEE80211_FULL) ||
-		( wrq.u.mode != IW_MODE_MONITOR && (dev->drivertype != DT_ORINOCO)) )
+	      ifr.ifr_hwaddr.sa_family != ARPHRD_IEEE80211_PRISM &&
+	      ifr.ifr_hwaddr.sa_family != ARPHRD_IEEE80211_FULL) ||
+	    ( wrq.u.mode != IW_MODE_MONITOR && (dev->drivertype != DT_ORINOCO)) )
 	{
 		return( 1 );
 	}
@@ -1109,7 +1109,7 @@ int set_monitor( struct priv_linux *dev, char *iface, int fd )
 		{
 			close( 0 ); close( 1 ); close( 2 );
 			if (chdir( "/" ) == -1)
-			perror("chdir");
+				perror("chdir");
 			execl( dev->wl, "wl", "monitor", "1", NULL);
 			exit( 1 );
 		}
@@ -1132,10 +1132,10 @@ int set_monitor( struct priv_linux *dev, char *iface, int fd )
 				if (chdir( "/" ) == -1)
 					perror("chdir");
 				execl( dev->wlanctlng, "wlanctl-ng", iface,
-						"lnxreq_wlansniff", "enable=true",
-						"prismheader=true", "wlanheader=false",
-						"stripfcs=true", "keepwepflags=true",
-						"6", NULL );
+				       "lnxreq_wlansniff", "enable=true",
+				       "prismheader=true", "wlanheader=false",
+				       "stripfcs=true", "keepwepflags=true",
+				       "6", NULL );
 				exit( 1 );
 			}
 
@@ -1153,7 +1153,7 @@ int set_monitor( struct priv_linux *dev, char *iface, int fd )
 				if (chdir( "/" ) == -1)
 					perror("chdir");
 				execlp( dev->iwpriv, "iwpriv", iface,
-						"monitor", "1", "1", NULL );
+				        "monitor", "1", "1", NULL );
 				exit( 1 );
 			}
 
@@ -1172,7 +1172,7 @@ int set_monitor( struct priv_linux *dev, char *iface, int fd )
 				if (chdir( "/" ) == -1)
 					perror("chdir");
 				execlp( dev->iwpriv, "iwpriv", iface,
-						"monitor", "2", "1", NULL );
+				        "monitor", "2", "1", NULL );
 				exit( 1 );
 			}
 
@@ -1241,7 +1241,7 @@ int set_monitor( struct priv_linux *dev, char *iface, int fd )
 
 
 static int openraw(struct priv_linux *dev, char *iface, int fd, int *arptype,
-		   unsigned char *mac)
+                   unsigned char *mac)
 {
 	struct ifreq ifr;
 	struct ifreq ifr2;
@@ -1344,7 +1344,7 @@ static int openraw(struct priv_linux *dev, char *iface, int fd, int *arptype,
 	     ifr.ifr_hwaddr.sa_family != ARPHRD_IEEE80211_FULL) ||
 	    (wrq.u.mode != IW_MODE_MONITOR)) {
 		if (set_monitor(dev, iface, fd) && dev->drivertype != DT_ORINOCO) {
-		/* Fixed by Kyle? -- previously !dev->drivertype == DT_ORINOCO */
+			/* Fixed by Kyle? -- previously !dev->drivertype == DT_ORINOCO */
 			ifr.ifr_flags &= ~(IFF_UP | IFF_BROADCAST | IFF_RUNNING);
 
 			if( ioctl( fd, SIOCSIFFLAGS, &ifr ) < 0 )
@@ -1354,7 +1354,7 @@ static int openraw(struct priv_linux *dev, char *iface, int fd, int *arptype,
 			}
 
 			if (set_monitor( dev, iface, fd ) && dev->drivertype != DT_ORINOCO ) {
-			/* Fixed by Kyle? -- previously !dev->drivertype == DT_ORINOCO */
+				/* Fixed by Kyle? -- previously !dev->drivertype == DT_ORINOCO */
 				printf("Error setting monitor mode on %s\n",iface);
 				return( 1 );
 			}
@@ -1376,7 +1376,7 @@ static int openraw(struct priv_linux *dev, char *iface, int fd, int *arptype,
 	/* bind the raw socket to the interface */
 
 	if( bind( fd, (struct sockaddr *) &sll,
-			  sizeof( sll ) ) < 0 )
+	          sizeof( sll ) ) < 0 )
 	{
 		printf("Interface %s: \n", iface);
 		perror( "bind(ETH_P_ALL) failed" );
@@ -1397,20 +1397,20 @@ static int openraw(struct priv_linux *dev, char *iface, int fd, int *arptype,
 	*arptype = ifr.ifr_hwaddr.sa_family;
 
 	if( ifr.ifr_hwaddr.sa_family != ARPHRD_IEEE80211 &&
-		ifr.ifr_hwaddr.sa_family != ARPHRD_IEEE80211_PRISM &&
-		ifr.ifr_hwaddr.sa_family != ARPHRD_IEEE80211_FULL )
+	    ifr.ifr_hwaddr.sa_family != ARPHRD_IEEE80211_PRISM &&
+	    ifr.ifr_hwaddr.sa_family != ARPHRD_IEEE80211_FULL )
 	{
 		if( ifr.ifr_hwaddr.sa_family == 1 )
 			fprintf( stderr, "\nARP linktype is set to 1 (Ethernet) " );
 		else
 			fprintf( stderr, "\nUnsupported hardware link type %4d ",
-					 ifr.ifr_hwaddr.sa_family );
+			         ifr.ifr_hwaddr.sa_family );
 
 		fprintf( stderr, "- expected ARPHRD_IEEE80211,\nARPHRD_IEEE80211_"
-						 "FULL or ARPHRD_IEEE80211_PRISM instead.  Make\n"
-						 "sure RFMON is enabled: run 'airmon-ng start %s"
-						 " <#>'\nSysfs injection support was not found "
-						 "either.\n\n", iface );
+		         "FULL or ARPHRD_IEEE80211_PRISM instead.  Make\n"
+		         "sure RFMON is enabled: run 'airmon-ng start %s"
+		         " <#>'\nSysfs injection support was not found "
+		         "either.\n\n", iface );
 		return( 1 );
 	}
 
@@ -1421,7 +1421,7 @@ static int openraw(struct priv_linux *dev, char *iface, int fd, int *arptype,
 	mr.mr_type	  = PACKET_MR_PROMISC;
 
 	if( setsockopt( fd, SOL_PACKET, PACKET_ADD_MEMBERSHIP,
-					&mr, sizeof( mr ) ) < 0 )
+	                &mr, sizeof( mr ) ) < 0 )
 	{
 		perror( "setsockopt(PACKET_MR_PROMISC) failed" );
 		return( 1 );
@@ -1457,7 +1457,7 @@ static int do_linux_open(struct wif *wi, char *iface)
 
 	/* open raw socks */
 	if( ( dev->fd_in = socket( PF_PACKET, SOCK_RAW,
-							  htons( ETH_P_ALL ) ) ) < 0 )
+	                           htons( ETH_P_ALL ) ) ) < 0 )
 	{
 		perror( "socket(PF_PACKET) failed" );
 		if( getuid() != 0 )
@@ -1507,8 +1507,8 @@ static int do_linux_open(struct wif *wi, char *iface)
 	/* mac80211 stack detection */
 	memset(strbuf, 0, sizeof(strbuf));
 	snprintf(strbuf, sizeof(strbuf) - 1,
-			"ls /sys/class/net/%s/phy80211/subsystem >/dev/null 2>/dev/null",
-			 iface);
+	         "ls /sys/class/net/%s/phy80211/subsystem >/dev/null 2>/dev/null",
+	         iface);
 
 	if (system(strbuf) == 0)
 		dev->drivertype = DT_MAC80211_RT;
@@ -1516,7 +1516,7 @@ static int do_linux_open(struct wif *wi, char *iface)
 	/* IPW2200 detection */
 	memset(strbuf, 0, sizeof(strbuf));
 	snprintf(strbuf, sizeof(strbuf) - 1,
-			"ls /sys/class/net/%s/device/inject >/dev/null 2>/dev/null", iface);
+	         "ls /sys/class/net/%s/device/inject >/dev/null 2>/dev/null", iface);
 
 	if (system(strbuf) == 0)
 		dev->drivertype = DT_IPW2200;
@@ -1524,339 +1524,339 @@ static int do_linux_open(struct wif *wi, char *iface)
 	/* BCM43XX detection */
 	memset(strbuf, 0, sizeof(strbuf));
 	snprintf(strbuf, sizeof(strbuf) - 1,
-			"ls /sys/class/net/%s/device/inject_nofcs >/dev/null 2>/dev/null", iface);
+	         "ls /sys/class/net/%s/device/inject_nofcs >/dev/null 2>/dev/null", iface);
 
 	if (system(strbuf) == 0)
 		dev->drivertype = DT_BCM43XX;
 
 
-    /* check if wlan-ng or hostap or r8180 */
-    if (strlen(iface) == 5 && memcmp(iface, "wlan", 4) == 0) {
-        memset(strbuf, 0, sizeof(strbuf));
-        snprintf(strbuf, sizeof(strbuf) - 1,
-                 "wlancfg show %s 2>/dev/null | "
-                 "grep p2CnfWEPFlags >/dev/null",
-                  iface);
+	/* check if wlan-ng or hostap or r8180 */
+	if (strlen(iface) == 5 && memcmp(iface, "wlan", 4) == 0) {
+		memset(strbuf, 0, sizeof(strbuf));
+		snprintf(strbuf, sizeof(strbuf) - 1,
+		         "wlancfg show %s 2>/dev/null | "
+		         "grep p2CnfWEPFlags >/dev/null",
+		         iface);
 
-        if (system(strbuf) == 0) {
-            if (uname(&checklinuxversion) >= 0) {
-                /* uname succeeded */
-                if (strncmp(checklinuxversion.release, "2.6.", 4) == 0
-                    && strncasecmp(checklinuxversion.sysname, "linux", 5) == 0)
-                {
-                    /* Linux kernel 2.6 */
-                    kver = atoi(checklinuxversion.release + 4);
+		if (system(strbuf) == 0) {
+			if (uname(&checklinuxversion) >= 0) {
+				/* uname succeeded */
+				if (strncmp(checklinuxversion.release, "2.6.", 4) == 0
+				    && strncasecmp(checklinuxversion.sysname, "linux", 5) == 0)
+				{
+					/* Linux kernel 2.6 */
+					kver = atoi(checklinuxversion.release + 4);
 
-                    if (kver > 11) {
-                        /* That's a kernel > 2.6.11, cannot inject */
-                        dev->inject_wlanng = 0;
-                    }
-                }
-            }
-            dev->drivertype = DT_WLANNG;
-            dev->wlanctlng = wiToolsPath("wlanctl-ng");
-        }
+					if (kver > 11) {
+						/* That's a kernel > 2.6.11, cannot inject */
+						dev->inject_wlanng = 0;
+					}
+				}
+			}
+			dev->drivertype = DT_WLANNG;
+			dev->wlanctlng = wiToolsPath("wlanctl-ng");
+		}
 
-        memset(strbuf, 0, sizeof(strbuf));
-        snprintf(strbuf, sizeof(strbuf) - 1,
-                 "iwpriv %s 2>/dev/null | "
-                 "grep antsel_rx >/dev/null",
-                 iface);
+		memset(strbuf, 0, sizeof(strbuf));
+		snprintf(strbuf, sizeof(strbuf) - 1,
+		         "iwpriv %s 2>/dev/null | "
+		         "grep antsel_rx >/dev/null",
+		         iface);
 
-        if (system(strbuf) == 0)
-            dev->drivertype = DT_HOSTAP;
+		if (system(strbuf) == 0)
+			dev->drivertype = DT_HOSTAP;
 
-        memset(strbuf, 0, sizeof(strbuf));
-        snprintf(strbuf, sizeof(strbuf) - 1,
-                 "iwpriv %s 2>/dev/null | "
-                 "grep  GetAcx111Info  >/dev/null",
-                 iface);
+		memset(strbuf, 0, sizeof(strbuf));
+		snprintf(strbuf, sizeof(strbuf) - 1,
+		         "iwpriv %s 2>/dev/null | "
+		         "grep  GetAcx111Info  >/dev/null",
+		         iface);
 
-        if (system(strbuf) == 0)
-            dev->drivertype = DT_ACX;
-    }
+		if (system(strbuf) == 0)
+			dev->drivertype = DT_ACX;
+	}
 
-    /* enable injection on ralink */
+	/* enable injection on ralink */
 
-    if (strcmp(iface, "ra0") == 0 || strcmp(iface, "ra1") == 0 ||
-        strcmp(iface, "rausb0") == 0 || strcmp(iface, "rausb1") == 0) {
-	memset(strbuf, 0, sizeof(strbuf));
-	snprintf(strbuf, sizeof(strbuf) - 1,
-	         "iwpriv %s rfmontx 1 >/dev/null 2>/dev/null",
-	         iface);
-        if (system(strbuf) != 0)
-	        perror("iwpriv");
-    }
+	if (strcmp(iface, "ra0") == 0 || strcmp(iface, "ra1") == 0 ||
+	    strcmp(iface, "rausb0") == 0 || strcmp(iface, "rausb1") == 0) {
+		memset(strbuf, 0, sizeof(strbuf));
+		snprintf(strbuf, sizeof(strbuf) - 1,
+		         "iwpriv %s rfmontx 1 >/dev/null 2>/dev/null",
+		         iface);
+		if (system(strbuf) != 0)
+			perror("iwpriv");
+	}
 
-    /* check if newer athXraw interface available */
+	/* check if newer athXraw interface available */
 
-    if ((strlen(iface) >= 4 || strlen(iface) <= 6)
-        && memcmp(iface, "ath", 3) == 0) {
-        dev->drivertype = DT_MADWIFI;
-        memset(strbuf, 0, sizeof(strbuf));
+	if ((strlen(iface) >= 4 || strlen(iface) <= 6)
+	    && memcmp(iface, "ath", 3) == 0) {
+		dev->drivertype = DT_MADWIFI;
+		memset(strbuf, 0, sizeof(strbuf));
 
-        snprintf(strbuf, sizeof(strbuf) - 1,
-                 "/proc/sys/net/%s/%%parent", iface);
+		snprintf(strbuf, sizeof(strbuf) - 1,
+		         "/proc/sys/net/%s/%%parent", iface);
 
-        f = fopen(strbuf, "r");
+		f = fopen(strbuf, "r");
 
-        if (f != NULL) {
-            // It is madwifi-ng
-            dev->drivertype = DT_MADWIFING;
-            fclose(f);
+		if (f != NULL) {
+			// It is madwifi-ng
+			dev->drivertype = DT_MADWIFING;
+			fclose(f);
 
-            /* should we force prism2 header? */
+			/* should we force prism2 header? */
 
-            sprintf((char *) strbuf, "/proc/sys/net/%s/dev_type", iface);
-            f = fopen( (char *) strbuf,"w");
-            if (f != NULL) {
-                fprintf(f, "802\n");
-                fclose(f);
-            }
+			sprintf((char *) strbuf, "/proc/sys/net/%s/dev_type", iface);
+			f = fopen( (char *) strbuf,"w");
+			if (f != NULL) {
+				fprintf(f, "802\n");
+				fclose(f);
+			}
 
-            /* Force prism2 header on madwifi-ng */
-        } else {
-	        // Madwifi-old
-            memset(strbuf, 0, sizeof(strbuf));
-            snprintf(strbuf,  sizeof(strbuf) - 1,
-                     "sysctl -w dev.%s.rawdev=1 >/dev/null 2>/dev/null",
-                     iface);
+			/* Force prism2 header on madwifi-ng */
+		} else {
+			// Madwifi-old
+			memset(strbuf, 0, sizeof(strbuf));
+			snprintf(strbuf,  sizeof(strbuf) - 1,
+			         "sysctl -w dev.%s.rawdev=1 >/dev/null 2>/dev/null",
+			         iface);
 
-            if (system(strbuf) == 0) {
-                athXraw[3] = iface[3];
+			if (system(strbuf) == 0) {
+				athXraw[3] = iface[3];
 
-                memset(strbuf, 0, sizeof(strbuf));
-                snprintf(strbuf, sizeof(strbuf) - 1,
-                         "ifconfig %s up", athXraw);
-                if (system(strbuf) != 0)
-	                perror("ifconfig up");
+				memset(strbuf, 0, sizeof(strbuf));
+				snprintf(strbuf, sizeof(strbuf) - 1,
+				         "ifconfig %s up", athXraw);
+				if (system(strbuf) != 0)
+					perror("ifconfig up");
 
 #if 0 /* some people reported problems when prismheader is enabled */
-                memset(strbuf, 0, sizeof(strbuf));
-                snprintf(strbuf, sizeof(strbuf) - 1,
-                         "sysctl -w dev.%s.rawdev_type=1 >/dev/null 2>/dev/null",
-                         iface);
-                if (system(strbuf) != 0)
-	                perror("sysctl")
+				memset(strbuf, 0, sizeof(strbuf));
+				snprintf(strbuf, sizeof(strbuf) - 1,
+				         "sysctl -w dev.%s.rawdev_type=1 >/dev/null 2>/dev/null",
+				         iface);
+				if (system(strbuf) != 0)
+					perror("sysctl")
 #endif
 
-                iface = athXraw;
-            }
-        }
-    }
+						iface = athXraw;
+			}
+		}
+	}
 
-    /* test if orinoco */
-    if (memcmp(iface, "eth", 3) == 0) {
-        if ((pid = fork()) == 0) {
-            close(0); close(1); close(2);
-            if (chdir("/") == -1)
-	            perror("chdir");
-            execlp("iwpriv", "iwpriv", iface, "get_port3", NULL);
-            exit(1);
-        }
+	/* test if orinoco */
+	if (memcmp(iface, "eth", 3) == 0) {
+		if ((pid = fork()) == 0) {
+			close(0); close(1); close(2);
+			if (chdir("/") == -1)
+				perror("chdir");
+			execlp("iwpriv", "iwpriv", iface, "get_port3", NULL);
+			exit(1);
+		}
 
-        waitpid(pid, &n, 0);
+		waitpid(pid, &n, 0);
 
-        if (WIFEXITED(n) && WEXITSTATUS(n) == 0)
-            dev->drivertype = DT_ORINOCO;
+		if (WIFEXITED(n) && WEXITSTATUS(n) == 0)
+			dev->drivertype = DT_ORINOCO;
 
-        memset(strbuf, 0, sizeof(strbuf));
-        snprintf(strbuf, sizeof(strbuf) - 1,
-                 "iwpriv %s 2>/dev/null | "
-                 "grep get_scan_times >/dev/null",
-                 iface);
+		memset(strbuf, 0, sizeof(strbuf));
+		snprintf(strbuf, sizeof(strbuf) - 1,
+		         "iwpriv %s 2>/dev/null | "
+		         "grep get_scan_times >/dev/null",
+		         iface);
 
-        if (system(strbuf) == 0)
-            dev->drivertype = DT_AT76USB;
-    }
+		if (system(strbuf) == 0)
+			dev->drivertype = DT_AT76USB;
+	}
 
-    /* test if zd1211rw */
-    if (memcmp(iface, "eth", 3) == 0) {
-        if ((pid = fork()) == 0) {
-            close(0); close(1); close(2);
-            if (chdir("/") == -1)
-	            perror("chdir");
-            execlp("iwpriv", "iwpriv", iface, "get_regdomain", NULL);
-            exit(1);
-        }
+	/* test if zd1211rw */
+	if (memcmp(iface, "eth", 3) == 0) {
+		if ((pid = fork()) == 0) {
+			close(0); close(1); close(2);
+			if (chdir("/") == -1)
+				perror("chdir");
+			execlp("iwpriv", "iwpriv", iface, "get_regdomain", NULL);
+			exit(1);
+		}
 
-        waitpid(pid, &n, 0);
+		waitpid(pid, &n, 0);
 
-        if (WIFEXITED(n) && WEXITSTATUS(n) == 0)
-            dev->drivertype=DT_ZD1211RW;
-    }
+		if (WIFEXITED(n) && WEXITSTATUS(n) == 0)
+			dev->drivertype=DT_ZD1211RW;
+	}
 
-    if (dev->drivertype == DT_IPW2200) {
-        snprintf(r_file, sizeof(r_file),
-            "/sys/class/net/%s/device/rtap_iface", iface);
-        if ((acpi = fopen(r_file, "r")) == NULL)
-            goto close_out;
-        memset(buf, 0, 128);
-        char* unused = fgets(buf, 128, acpi);
-        buf[127]='\x00';
-        //rtap iface doesn't exist
-        if (strncmp(buf, "-1", 2) == 0) {
-            //repoen for writing
-            fclose(acpi);
-            if ((acpi = fopen(r_file, "w")) == NULL)
-                goto close_out;
-            fputs("1", acpi);
-            //reopen for reading
-            fclose(acpi);
-            if ((acpi = fopen(r_file, "r")) == NULL)
-                goto close_out;
-            unused = fgets(buf, 128, acpi);
-        }
-        fclose(acpi);
+	if (dev->drivertype == DT_IPW2200) {
+		snprintf(r_file, sizeof(r_file),
+		         "/sys/class/net/%s/device/rtap_iface", iface);
+		if ((acpi = fopen(r_file, "r")) == NULL)
+			goto close_out;
+		memset(buf, 0, 128);
+		char* unused = fgets(buf, 128, acpi);
+		buf[127]='\x00';
+		//rtap iface doesn't exist
+		if (strncmp(buf, "-1", 2) == 0) {
+			//repoen for writing
+			fclose(acpi);
+			if ((acpi = fopen(r_file, "w")) == NULL)
+				goto close_out;
+			fputs("1", acpi);
+			//reopen for reading
+			fclose(acpi);
+			if ((acpi = fopen(r_file, "r")) == NULL)
+				goto close_out;
+			unused = fgets(buf, 128, acpi);
+		}
+		fclose(acpi);
 
-        //use name in buf as new iface and set original iface as main iface
-        dev->main_if = (char*) malloc(strlen(iface)+1);
-        memset(dev->main_if, 0, strlen(iface)+1);
-        strncpy(dev->main_if, iface, strlen(iface));
+		//use name in buf as new iface and set original iface as main iface
+		dev->main_if = (char*) malloc(strlen(iface)+1);
+		memset(dev->main_if, 0, strlen(iface)+1);
+		strncpy(dev->main_if, iface, strlen(iface));
 
-        iface=(char*)malloc(strlen(buf)+1);
-        iface_malloced = 1;
-        memset(iface, 0, strlen(buf)+1);
-        strncpy(iface, buf, strlen(buf));
-    }
+		iface=(char*)malloc(strlen(buf)+1);
+		iface_malloced = 1;
+		memset(iface, 0, strlen(buf)+1);
+		strncpy(iface, buf, strlen(buf));
+	}
 
-    /* test if rtap interface and try to find real interface */
-    if( memcmp( iface, "rtap", 4) == 0 && dev->main_if == NULL)
-    {
-        memset( &ifr, 0, sizeof( ifr ) );
-        strncpy( ifr.ifr_name, iface, sizeof( ifr.ifr_name ) - 1 );
+	/* test if rtap interface and try to find real interface */
+	if( memcmp( iface, "rtap", 4) == 0 && dev->main_if == NULL)
+	{
+		memset( &ifr, 0, sizeof( ifr ) );
+		strncpy( ifr.ifr_name, iface, sizeof( ifr.ifr_name ) - 1 );
 
-        n = 0;
+		n = 0;
 
-        if( ioctl( dev->fd_out, SIOCGIFINDEX, &ifr ) < 0 )
-        {
-            //create rtap interface
-            n = 1;
-        }
+		if( ioctl( dev->fd_out, SIOCGIFINDEX, &ifr ) < 0 )
+		{
+			//create rtap interface
+			n = 1;
+		}
 
-        net_ifaces = opendir("/sys/class/net");
-        if ( net_ifaces != NULL )
-        {
-            while (net_ifaces != NULL && ((this_iface = readdir(net_ifaces)) != NULL))
-            {
-                if (this_iface->d_name[0] == '.')
-                    continue;
+		net_ifaces = opendir("/sys/class/net");
+		if ( net_ifaces != NULL )
+		{
+			while (net_ifaces != NULL && ((this_iface = readdir(net_ifaces)) != NULL))
+			{
+				if (this_iface->d_name[0] == '.')
+					continue;
 
-                snprintf(r_file, sizeof(r_file),
-                    "/sys/class/net/%s/device/rtap_iface", this_iface->d_name);
-                if ((acpi = fopen(r_file, "r")) == NULL)
-                    continue;
-                if (acpi != NULL)
-                {
-                    dev->drivertype = DT_IPW2200;
+				snprintf(r_file, sizeof(r_file),
+				         "/sys/class/net/%s/device/rtap_iface", this_iface->d_name);
+				if ((acpi = fopen(r_file, "r")) == NULL)
+					continue;
+				if (acpi != NULL)
+				{
+					dev->drivertype = DT_IPW2200;
 
-                    memset(buf, 0, 128);
-                    char *unused = fgets(buf, 128, acpi);
-                    if(n==0) //interface exists
-                    {
-                        if (strncmp(buf, iface, 5) == 0)
-                        {
-                            fclose(acpi);
-                            if (net_ifaces != NULL)
-                            {
-                                closedir(net_ifaces);
-                                net_ifaces = NULL;
-                            }
-                            dev->main_if = (char*) malloc(strlen(this_iface->d_name)+1);
-                            strcpy(dev->main_if, this_iface->d_name);
-                            break;
-                        }
-                    }
-                    else //need to create interface
-                    {
-                        if (strncmp(buf, "-1", 2) == 0)
-                        {
-                            //repoen for writing
-                            fclose(acpi);
-                            if ((acpi = fopen(r_file, "w")) == NULL)
-                                continue;
-                            fputs("1", acpi);
-                            //reopen for reading
-                            fclose(acpi);
-                            if ((acpi = fopen(r_file, "r")) == NULL)
-                                continue;
-                            unused = fgets(buf, 128, acpi);
-                            if (strncmp(buf, iface, 5) == 0)
-                            {
-                                if (net_ifaces != NULL)
-                                {
-                                    closedir(net_ifaces);
-                                    net_ifaces = NULL;
-                                }
-                                dev->main_if = (char*) malloc(strlen(this_iface->d_name)+1);
-                                strcpy(dev->main_if, this_iface->d_name);
-                                fclose(acpi);
-                                break;
-                            }
-                        }
-                    }
-                    fclose(acpi);
-                }
-            }
-            if (net_ifaces != NULL)
-                closedir(net_ifaces);
-        }
-    }
+					memset(buf, 0, 128);
+					char *unused = fgets(buf, 128, acpi);
+					if(n==0) //interface exists
+					{
+						if (strncmp(buf, iface, 5) == 0)
+						{
+							fclose(acpi);
+							if (net_ifaces != NULL)
+							{
+								closedir(net_ifaces);
+								net_ifaces = NULL;
+							}
+							dev->main_if = (char*) malloc(strlen(this_iface->d_name)+1);
+							strcpy(dev->main_if, this_iface->d_name);
+							break;
+						}
+					}
+					else //need to create interface
+					{
+						if (strncmp(buf, "-1", 2) == 0)
+						{
+							//repoen for writing
+							fclose(acpi);
+							if ((acpi = fopen(r_file, "w")) == NULL)
+								continue;
+							fputs("1", acpi);
+							//reopen for reading
+							fclose(acpi);
+							if ((acpi = fopen(r_file, "r")) == NULL)
+								continue;
+							unused = fgets(buf, 128, acpi);
+							if (strncmp(buf, iface, 5) == 0)
+							{
+								if (net_ifaces != NULL)
+								{
+									closedir(net_ifaces);
+									net_ifaces = NULL;
+								}
+								dev->main_if = (char*) malloc(strlen(this_iface->d_name)+1);
+								strcpy(dev->main_if, this_iface->d_name);
+								fclose(acpi);
+								break;
+							}
+						}
+					}
+					fclose(acpi);
+				}
+			}
+			if (net_ifaces != NULL)
+				closedir(net_ifaces);
+		}
+	}
 
-    if(0)
-    fprintf(stderr, "Interface %s -> driver: %s\n", iface,
-        szaDriverTypes[dev->drivertype]);
+	if(0)
+		fprintf(stderr, "Interface %s -> driver: %s\n", iface,
+		        szaDriverTypes[dev->drivertype]);
 
-    if (openraw(dev, iface, dev->fd_out, &dev->arptype_out, dev->pl_mac) != 0) {
-        goto close_out;
-    }
+	if (openraw(dev, iface, dev->fd_out, &dev->arptype_out, dev->pl_mac) != 0) {
+		goto close_out;
+	}
 
-    /* don't use the same file descriptor for in and out on bcm43xx,
-       as you read from the interface, but write into a file in /sys/...
-     */
-    if(!(dev->drivertype == DT_BCM43XX) && !(dev->drivertype == DT_IPW2200))
-        dev->fd_in = dev->fd_out;
-    else
-    {
-        /* if bcm43xx or ipw2200, swap both fds */
-        n=dev->fd_out;
-        dev->fd_out=dev->fd_in;
-        dev->fd_in=n;
-    }
+	/* don't use the same file descriptor for in and out on bcm43xx,
+	   as you read from the interface, but write into a file in /sys/...
+	*/
+	if(!(dev->drivertype == DT_BCM43XX) && !(dev->drivertype == DT_IPW2200))
+		dev->fd_in = dev->fd_out;
+	else
+	{
+		/* if bcm43xx or ipw2200, swap both fds */
+		n=dev->fd_out;
+		dev->fd_out=dev->fd_in;
+		dev->fd_in=n;
+	}
 
-    dev->arptype_in = dev->arptype_out;
+	dev->arptype_in = dev->arptype_out;
 
-    if(iface_malloced) free(iface);
-    return 0;
+	if(iface_malloced) free(iface);
+	return 0;
 close_out:
-    close(dev->fd_out);
+	close(dev->fd_out);
 close_in:
-    close(dev->fd_in);
-    if(iface_malloced) free(iface);
-    return 1;
+	close(dev->fd_in);
+	if(iface_malloced) free(iface);
+	return 1;
 }
 
 static void do_free(struct wif *wi)
 {
 	struct priv_linux *pl = wi_priv(wi);
 
-        if(pl->wlanctlng)
-            free(pl->wlanctlng);
+	if(pl->wlanctlng)
+		free(pl->wlanctlng);
 
-        if(pl->iwpriv)
-            free(pl->iwpriv);
+	if(pl->iwpriv)
+		free(pl->iwpriv);
 
-        if(pl->iwconfig)
-            free(pl->iwconfig);
+	if(pl->iwconfig)
+		free(pl->iwconfig);
 
-        if(pl->ifconfig)
-            free(pl->ifconfig);
+	if(pl->ifconfig)
+		free(pl->ifconfig);
 
-        if(pl->wl)
-            free(pl->wl);
+	if(pl->wl)
+		free(pl->wl);
 
 	if(pl->main_if)
-            free(pl->main_if);
+		free(pl->main_if);
 
 	free(pl);
 	free(wi);
@@ -1939,31 +1939,30 @@ static int linux_set_mac(struct wif *wi, unsigned char *mac)
 	}
 
 //         if down
-        ifr.ifr_flags &= ~(IFF_UP | IFF_BROADCAST | IFF_RUNNING);
+	ifr.ifr_flags &= ~(IFF_UP | IFF_BROADCAST | IFF_RUNNING);
 
-        if( ioctl( fd, SIOCSIFFLAGS, &ifr ) < 0 )
-        {
-            perror( "ioctl(SIOCSIFFLAGS) failed" );
-            return( 1 );
-        }
+	if( ioctl( fd, SIOCSIFFLAGS, &ifr ) < 0 )
+	{
+		perror( "ioctl(SIOCSIFFLAGS) failed" );
+		return( 1 );
+	}
 
- 	ifr.ifr_hwaddr.sa_family = ARPHRD_ETHER;
+	ifr.ifr_hwaddr.sa_family = ARPHRD_ETHER;
 	memcpy(ifr.ifr_hwaddr.sa_data, mac, 6);
 	memcpy(pl->pl_mac, mac, 6);
 
-        //set mac
-        ret = ioctl(fd, SIOCSIFHWADDR, &ifr);
+	//set mac
+	ret = ioctl(fd, SIOCSIFHWADDR, &ifr);
 
-        //if up
-        ifr.ifr_flags |= IFF_UP | IFF_BROADCAST | IFF_RUNNING;
+	//if up
+	ifr.ifr_flags |= IFF_UP | IFF_BROADCAST | IFF_RUNNING;
 
-        if( ioctl( fd, SIOCSIFFLAGS, &ifr ) < 0 )
-        {
-            perror( "ioctl(SIOCSIFFLAGS) failed" );
-            return( 1 );
-        }
+	if (ioctl(fd, SIOCSIFFLAGS, &ifr) < 0) {
+		perror("ioctl(SIOCSIFFLAGS) failed");
+		return 1;
+	}
 
-        return ret;
+	return ret;
 }
 
 static struct wif *linux_open(char *iface)
@@ -1974,22 +1973,22 @@ static struct wif *linux_open(char *iface)
 	wi = wi_alloc(sizeof(*pl));
 	if (!wi)
 		return NULL;
-	wi->wi_read         = linux_read;
-	wi->wi_write        = linux_write;
-	wi->wi_set_channel  = linux_set_channel;
-	wi->wi_get_channel  = linux_get_channel;
-	wi->wi_set_freq		= linux_set_freq;
-	wi->wi_get_freq		= linux_get_freq;
-	wi->wi_close        = linux_close;
-	wi->wi_fd           = linux_fd;
-	wi->wi_get_mac		= linux_get_mac;
-	wi->wi_set_mac		= linux_set_mac;
-	wi->wi_get_monitor  = linux_get_monitor;
-	wi->wi_get_rate		= linux_get_rate;
-	wi->wi_set_rate		= linux_set_rate;
-	wi->wi_get_mtu		= linux_get_mtu;
-	wi->wi_set_mtu		= linux_set_mtu;
-	wi->wi_set_txpower	= linux_set_txpower;
+	wi->wi_read        = linux_read;
+	wi->wi_write       = linux_write;
+	wi->wi_set_channel = linux_set_channel;
+	wi->wi_get_channel = linux_get_channel;
+	wi->wi_set_freq	   = linux_set_freq;
+	wi->wi_get_freq    = linux_get_freq;
+	wi->wi_close       = linux_close;
+	wi->wi_fd          = linux_fd;
+	wi->wi_get_mac	   = linux_get_mac;
+	wi->wi_set_mac	   = linux_set_mac;
+	wi->wi_get_monitor = linux_get_monitor;
+	wi->wi_get_rate	   = linux_get_rate;
+	wi->wi_set_rate	   = linux_set_rate;
+	wi->wi_get_mtu	   = linux_get_mtu;
+	wi->wi_set_mtu	   = linux_set_mtu;
+	wi->wi_set_txpower = linux_set_txpower;
 
 	if (do_linux_open(wi, iface)) {
 		do_free(wi);
@@ -2001,5 +2000,5 @@ static struct wif *linux_open(char *iface)
 
 struct wif *wi_open_osdep(char *iface)
 {
-        return linux_open(iface);
+	return linux_open(iface);
 }
