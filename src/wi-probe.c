@@ -225,8 +225,7 @@ int main(int argc, char *argv[])
 			i = 0;
 			while ((channel = strsep(&str, ","))) {
 				tx_settings.chan[i] = (int) strtol(channel, (char **)NULL, 10);
-				if (tx_settings.chan[i] < 1 || tx_settings.chan[i] > 11)
-				{
+				if (tx_settings.chan[i] < 1 || tx_settings.chan[i] > 11) {
 					printf("Invalid channel. [1-11]\n");
 					printf("\"%s --help\" for help.\n", argv[0]);
 					return 1;
