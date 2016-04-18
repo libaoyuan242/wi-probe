@@ -3,7 +3,7 @@ RTAP = radiotap
 LIB = libosdep.a
 
 CFLAGS += -fPIC
-OBJS = osdep.o linux.o radiotap/radiotap.o common.o network.o file.o
+OBJS = osdep.o linux.o radiotap/radiotap.o common.o file.o
 
 all:
 	@echo Building for Linux
